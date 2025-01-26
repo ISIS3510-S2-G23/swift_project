@@ -1,1 +1,10 @@
-/swift_app/swift_app.xcodeproj
+# User-specific settings
+*.xcuserdata/
+*.xcuserdatad/
+
+# Temporary or build files
+DerivedData/
+build/
+
+# macOS-specific files
+.DS_Store
