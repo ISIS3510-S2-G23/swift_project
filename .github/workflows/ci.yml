@@ -23,7 +23,7 @@ jobs:
         run: sudo ls /Applications | grep Xcode
         
       - name: Set up Xcode
-        run: sudo xcode-select -switch /Applications/Xcode.app
+        run: sudo xcode-select -switch /Applications/Xcode_16.2.app
 
       - name: Install dependencies
         run: |
