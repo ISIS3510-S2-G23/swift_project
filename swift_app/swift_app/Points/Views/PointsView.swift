@@ -15,6 +15,7 @@ struct PointsView: View {
     
     var body: some View {
         VStack{
+            //Main title and image
             HStack {
                 Text("Recycle points in Bogotá")
                     .font(.title2)
@@ -30,6 +31,8 @@ struct PointsView: View {
                     
             }
             .padding(.horizontal, 20)
+            
+            //Searchbar
             TextField("Find locations", text: $searchText)
                 .padding(15)
                 .background(Color(.ecoLightPurple))
@@ -44,6 +47,8 @@ struct PointsView: View {
                     }
                 )
                 .foregroundStyle(.ecoMainPurple)
+            
+            //Text
             HStack{
                 Text("Choose your preference")
                     .font(.headline)
@@ -54,13 +59,14 @@ struct PointsView: View {
                 Spacer()
             }
             
-            
+            //Categories buttons
             HStack {
                 ForEach(categories, id: \.self) { category in
                     Button(action: {
                         selectedTab = category
                     }) {
                         Text(category)
+                        //If category is selected, text is bold
                             .fontWeight(selectedTab == category ? .bold : .regular)
                             .foregroundColor(.ecoMainPurple)
                             .padding(.vertical, 15)
@@ -68,6 +74,7 @@ struct PointsView: View {
                             .overlay(
                                 Rectangle()
                                     .frame(height: 3)
+                                //If category is selected, the lower bar is colored
                                     .foregroundColor(selectedTab == category ? .ecoMainPurple.opacity(1) : .ecoMainPurple.opacity(0.3)),
                                 alignment: .bottom
                             )
