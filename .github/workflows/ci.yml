@@ -19,6 +19,9 @@ jobs:
       - name: List directory contents (debug)
         run: ls -la
 
+      - name: List available Xcode versions
+        run: sudo ls /Applications | grep Xcode
+        
       - name: Set up Xcode
         run: sudo xcode-select -switch /Applications/Xcode.app
 
