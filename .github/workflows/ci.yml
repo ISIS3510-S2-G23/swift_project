@@ -38,9 +38,9 @@ jobs:
       - name: Build project
         run: |
           cd swift_app  # Ensure the script runs inside the project folder
-          xcodebuild clean build -project swift_app.xcodeproj -scheme swift_app -destination "platform=iOS Simulator,name=iPhone 15 Pro"
+          xcodebuild clean build -project swift_app.xcodeproj -scheme swift_app -destination "platform=iOS Simulator,OS=18.2,name=iPhone 16 Pro"
 
       - name: Run tests
         run: |
           cd swift_app
-          xcodebuild test -project swift_app.xcodeproj -scheme swift_app -destination "platform=iOS Simulator,name=iPhone 15 Pro"
+          xcodebuild test -project swift_app.xcodeproj -scheme swift_app -destination "platform=iOS Simulator,OS=18.2,name=iPhone 16 Pro"
