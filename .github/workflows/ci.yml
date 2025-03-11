@@ -20,4 +20,4 @@ jobs:
       uses: maxim-lobanov/setup-xcode@v1
       
     - name: Build and Test
-      run: cd swift_project/swift_app && xcodebuild -scheme swift_app -destination 'platform=iOS Simulator,name=iPhone 13' clean build test
+      run: cd swift_app && xcodebuild -scheme swift_app -destination 'platform=iOS Simulator,name=iPhone 13' clean build test
