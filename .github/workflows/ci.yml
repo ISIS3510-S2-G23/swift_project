@@ -16,8 +16,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: List available simulators
+        run: xcrun simctl list devices
+
       - name: Set up Xcode
-        run: sudo xcode-select -switch /Applications/Xcode.app
+        run: sudo xcode-select -switch /Applications/Xcode_15.2.app
 
       - name: Install dependencies
         run: |
@@ -30,8 +33,10 @@ jobs:
 
       - name: Build project
         run: |
-          xcodebuild clean build -project swift_app.xcodeproj -scheme swift_app -destination "generic/platform=iOS Simulator"
+          cd swift_app  # Adjust if your project is in a different directory
+          xcodebuild clean build -project swift_app.xcodeproj -scheme swift_app -destination "platform=iOS Simulator,OS=17.2,name=iPhone 15 Pro"
 
       - name: Run tests
         run: |
-          xcodebuild test -project swift_app.xcodeproj -scheme swift_app -destination "generic/platform=iOS Simulator"
+          cd swift_app
+          xcodebuild test -project swift_app.xcodeproj -scheme swift_app -destination "platform=iOS Simulator,OS=17.2,name=iPhone 15 Pro"
