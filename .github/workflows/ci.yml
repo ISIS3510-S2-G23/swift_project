@@ -18,7 +18,10 @@ jobs:
 
       - name: Set up Xcode
         run: sudo xcode-select -switch /Applications/Xcode.app
-
+        
+      - name: List directory contents (debug)
+        run: ls -la
+        
       - name: Install dependencies
         run: |
           if [ -f Podfile ]; then
