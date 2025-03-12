@@ -33,7 +33,7 @@ xcuserdata/
 !/*.xcworkspace/contents.xcworkspacedata
 !/*.xcworkspace/xcshareddata/
 !/*.xcworkspace/xcuserdata/
-
+swift_app.xcodeproj/xcshareddata/
 ### Xcode Patch End ###
 
 ## Obj-C/Swift specific
