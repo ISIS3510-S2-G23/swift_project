@@ -26,10 +26,10 @@ class MapViewController: UIViewController {
         ])
         
         // Set an initial location (Example: New York City)
-        let initialLocation = CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060)
+        let initialLocation = CLLocationCoordinate2D(latitude: 4.602978147636273, longitude: -74.06520670796498)
         let region = MKCoordinateRegion(
             center: initialLocation,
-            span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+            span: MKCoordinateSpan(latitudeDelta: 0.0015, longitudeDelta: 0.0015)
         )
         mapView.setRegion(region, animated: true)
     }
