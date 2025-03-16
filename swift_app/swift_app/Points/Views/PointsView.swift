@@ -28,7 +28,7 @@ struct PointsView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 65, height: 65)
-                    
+                
             }
             .padding(.horizontal, 20)
             
@@ -83,6 +83,26 @@ struct PointsView: View {
                 
             }
             .padding(.horizontal, 10)
+            
+            Group {
+                switch selectedTab {
+                case "Near Me":
+                    NearMeView()
+                case "Challenges":
+                    Text("Challenges")
+                        .font(.title2)
+                        .foregroundColor(.gray)
+                        .padding()
+                case "Rewards":
+                    Text("Rewards")
+                        .font(.title2)
+                        .foregroundColor(.gray)
+                        .padding()
+                default:
+                    EmptyView()
+                }
+            }
+            .padding(.top, 10)
             Spacer()
             
         }
