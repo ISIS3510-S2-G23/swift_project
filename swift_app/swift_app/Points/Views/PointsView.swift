@@ -89,15 +89,9 @@ struct PointsView: View {
                 case "Near Me":
                     NearMeView()
                 case "Challenges":
-                    Text("Challenges")
-                        .font(.title2)
-                        .foregroundColor(.gray)
-                        .padding()
+                    ChallengesView()
                 case "Rewards":
-                    Text("Rewards")
-                        .font(.title2)
-                        .foregroundColor(.gray)
-                        .padding()
+                    RewardsView()
                 default:
                     EmptyView()
                 }
