@@ -7,32 +7,30 @@
 
 import SwiftUI
 
-
 struct PointsView: View {
     @State private var searchText: String = ""
     @State private var selectedTab: String = "Near Me"
     let categories = ["Near Me", "Challenges", "Rewards"]
     
     var body: some View {
-        VStack{
-            //Main title and image
+        VStack {
+            // Main title and image
             HStack {
                 Text("Recycle points in Bogotá")
                     .font(.title2)
                     .foregroundStyle(.ecoMainPurple)
                     .fontWeight(.bold)
-                
+
                 Spacer()
-                
+
                 Image(.person8)
                     .resizable()
                     .scaledToFit()
                     .frame(width: 65, height: 65)
-                    
             }
             .padding(.horizontal, 20)
-            
-            //Searchbar
+
+            // Search bar
             TextField("Find locations", text: $searchText)
                 .padding(15)
                 .background(Color(.ecoLightPurple))
@@ -47,9 +45,9 @@ struct PointsView: View {
                     }
                 )
                 .foregroundStyle(.ecoMainPurple)
-            
-            //Text
-            HStack{
+
+            // Category selection
+            HStack {
                 Text("Choose your preference")
                     .font(.headline)
                     .foregroundStyle(.ecoChooseBlue)
@@ -58,15 +56,13 @@ struct PointsView: View {
                     .padding(.leading, 20)
                 Spacer()
             }
-            
-            //Categories buttons
+
             HStack {
                 ForEach(categories, id: \.self) { category in
                     Button(action: {
                         selectedTab = category
                     }) {
                         Text(category)
-                        //If category is selected, text is bold
                             .fontWeight(selectedTab == category ? .bold : .regular)
                             .foregroundColor(.ecoMainPurple)
                             .padding(.vertical, 15)
@@ -74,23 +70,34 @@ struct PointsView: View {
                             .overlay(
                                 Rectangle()
                                     .frame(height: 3)
-                                //If category is selected, the lower bar is colored
                                     .foregroundColor(selectedTab == category ? .ecoMainPurple.opacity(1) : .ecoMainPurple.opacity(0.3)),
                                 alignment: .bottom
                             )
                     }
                 }
-                
             }
             .padding(.horizontal, 10)
-            Spacer()
+
+            // Tab content
+            Group {
+                switch selectedTab {
+                case "Near Me":
+                    NearMeView()
+                case "Challenges":
+                    ChallengesView(selectedTab: $selectedTab) // Pass binding
+                case "Rewards":
+                    RewardsView()
+                default:
+                    EmptyView()
+                }
+            }
+            .padding(.top, 10)
             
+            Spacer()
         }
-        
     }
 }
 
 #Preview {
     PointsView()
 }
-
