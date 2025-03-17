@@ -13,4 +13,5 @@ struct Challenge: Identifiable {
     let completionPercentage: Int
     let isCompleted: Bool
     let expirationDate: String
+    let reward: String
 }
