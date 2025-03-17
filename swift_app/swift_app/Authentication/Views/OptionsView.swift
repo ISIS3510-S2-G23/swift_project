@@ -10,10 +10,10 @@ import SwiftUI
 struct OptionsView: View {
     // Define customizable colors
     let backgroundColor = Color.white
-    let primaryTextColor = Color(#colorLiteral(red: 0.427, green: 0.419, blue: 0.647, alpha: 1))
+    let primaryTextColor = Color(red: 0.427, green: 0.419, blue: 0.647)
     let secondaryTextColor = Color.gray
-    let buttonBackgroundColor = Color(#colorLiteral(red: 0.721, green: 0.871, blue: 0.871, alpha: 1))
-    let buttonTextColor = Color(#colorLiteral(red: 0.251, green: 0.239, blue: 0.412, alpha: 1))
+    let buttonBackgroundColor = Color(red: 0.721, green: 0.871, blue: 0.871)
+    let buttonTextColor = Color(red: 0.251, green: 0.239, blue: 0.412)
     
     var body: some View {
         NavigationView {
@@ -41,16 +41,14 @@ struct OptionsView: View {
                 
                 // Buttons
                 HStack(spacing: 20) {
-                    NavigationLink(destination: LoginView()) {
+                    NavigationLink(destination: LoginView().navigationBarBackButtonHidden(true)) {
                         Image("Login Button")
                             .resizable()
                             .scaledToFit()
                             .frame(height: 50)
                     }
                     
-                    Button(action: {
-                        // Action for Sign up
-                    }) {
+                    NavigationLink(destination: SignUpView().navigationBarBackButtonHidden(true)) {
                         Image("Sign Up Button")
                             .resizable()
                             .scaledToFit()
@@ -62,6 +60,7 @@ struct OptionsView: View {
                 Spacer()
             }
             .background(backgroundColor.ignoresSafeArea())
+            .navigationBarHidden(true)
         }
     }
 }
