@@ -9,31 +9,34 @@ import SwiftUI
 
 struct ChallengesView: View {
     @StateObject private var viewModel = ChallengesViewModel()
-    @State private var isPopupPresented = false  // Tracks if the popup is shown
-    @State private var selectedChallenge: Challenge?  // Stores the selected challenge
+    @Binding var selectedTab: String
+
+    @State private var selectedChallenge: Challenge?
 
     var body: some View {
         ZStack {
             VStack {
                 ForEach(viewModel.challenges) { challenge in
-                    ChallengeCardView(
-                        challenge: challenge,
-                        isPopupPresented: $isPopupPresented,
-                        selectedChallenge: $selectedChallenge
-                    )
+                    ChallengeCardView(challenge: challenge, selectedChallenge: $selectedChallenge)
                 }
             }
             .padding(.top, 10)
 
-            // Show popup if a challenge is selected
-            if isPopupPresented, let challenge = selectedChallenge {
-                ChallengePopUpView(isPresented: $isPopupPresented, challenge: challenge)
-                    .zIndex(1)  // Ensure it appears above everything
+            
+            if let challenge = selectedChallenge {
+                ChallengePopUpView(
+                    isPresented: Binding(
+                        get: { selectedChallenge != nil },
+                        set: { if !$0 { selectedChallenge = nil } }
+                    ),
+                    challenge: challenge,
+                    selectedTab: $selectedTab 
+                )
             }
         }
     }
 }
 
 #Preview {
-    ChallengesView()
+    ChallengesView(selectedTab: .constant("Challenges"))
 }

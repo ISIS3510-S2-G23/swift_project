@@ -1,15 +1,20 @@
+//
+//  ChallengeCardView.swift
+//  swift_app
+//
+//  Created by Juan Sebastian Pardo on 3/16/25.
+//
+
 import SwiftUI
 
 struct ChallengeCardView: View {
     let challenge: Challenge
-    @Binding var isPopupPresented: Bool  // Passed from ChallengesView
-    @Binding var selectedChallenge: Challenge?  // Passed from ChallengesView
+    @Binding var selectedChallenge: Challenge?
 
     var body: some View {
         HStack {
             Button(action: {
-                selectedChallenge = challenge  // Store selected challenge
-                isPopupPresented = true  // Trigger popup
+                selectedChallenge = challenge  
             }) {
                 Image(challenge.isCompleted ? .completeChallenge : .incompleteChallenge)
                     .resizable()
