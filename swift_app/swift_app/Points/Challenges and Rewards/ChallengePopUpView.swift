@@ -13,7 +13,7 @@ struct ChallengePopUpView: View {
         var body: some View {
             ZStack {
                 // Dark overlay background
-                Color.black.opacity(0.4)
+                Color.black.opacity(0)
                     .edgesIgnoringSafeArea(.all)
                     .onTapGesture {
                         isPresented = false
@@ -105,6 +105,4 @@ struct ChallengePopUpView: View {
         }
 }
 
-#Preview {
-    ChallengePopUpView(isPresented: .constant(true),challenge: Challenge(title: "Challenge 1 - go to 3 recycle points", completionPercentage: 100, isCompleted: true, expirationDate: "Feb 12", reward: "Money"))
-}
+
