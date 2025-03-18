@@ -195,8 +195,8 @@ struct LoginView: View {
                 
                 // Navigation after successful authentication
                 .navigationDestination(isPresented: $navigateToHome) {
-                    PointsView(selectedView: $selectedViewIndex)
-                        .navigationBarBackButtonHidden(true)
+                    MainTabView()
+                    .navigationBarBackButtonHidden(true)
                 }
             }
             .alert(isPresented: $showAlert) {
