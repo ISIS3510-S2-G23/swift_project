@@ -5,14 +5,21 @@
 //  Created by Paulina Arrazola on 12/03/25.
 //
 import SwiftUI
+import Firebase
+import FirebaseAuth
+import FirebaseFirestore
 
 struct SignUpView: View {
-    @State private var email: String = "user@gmail.com"
-    @State private var username: String = "User1"
-    @State private var password: String = "******"
-    @State private var confirmPassword: String = "******"
+    @State private var email: String = ""
+    @State private var username: String = ""
+    @State private var password: String = ""
+    @State private var confirmPassword: String = ""
     @State private var isPasswordVisible: Bool = false
     @State private var isConfirmPasswordVisible: Bool = false
+    @State private var showAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
+    @State private var isLoading = false
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
@@ -61,6 +68,8 @@ struct SignUpView: View {
                                 .foregroundColor(Color.purple.opacity(0.7))
                             
                             TextField("", text: $email)
+                                .keyboardType(.emailAddress)
+                                .autocapitalization(.none)
                                 .padding()
                                 .background(Color.white)
                                 .cornerRadius(8)
@@ -76,6 +85,7 @@ struct SignUpView: View {
                                 .foregroundColor(Color.purple.opacity(0.7))
                             
                             TextField("", text: $username)
+                                .autocapitalization(.none)
                                 .padding()
                                 .background(Color.white)
                                 .cornerRadius(8)
@@ -93,6 +103,7 @@ struct SignUpView: View {
                             ZStack {
                                 if isPasswordVisible {
                                     TextField("", text: $password)
+                                        .autocapitalization(.none)
                                         .padding()
                                         .background(Color.white)
                                         .cornerRadius(8)
@@ -132,6 +143,7 @@ struct SignUpView: View {
                             ZStack {
                                 if isConfirmPasswordVisible {
                                     TextField("", text: $confirmPassword)
+                                        .autocapitalization(.none)
                                         .padding()
                                         .background(Color.white)
                                         .cornerRadius(8)
@@ -164,12 +176,24 @@ struct SignUpView: View {
                         }
                         
                         Button(action: {
-                            // Handle sign up action
+                            signUp()
                         }) {
-                            Image("Long SignUp")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: .infinity)
+                            if isLoading {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 50)
+                                    .background(Color(red: 0.278, green: 0.278, blue: 0.529))
+                                    .cornerRadius(8)
+                            } else {
+                                Text("Sign Up")
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 50)
+                                    .background(Color(red: 0.278, green: 0.278, blue: 0.529))
+                                    .cornerRadius(8)
+                            }
                         }
                         .padding(.top, 10)
                         
@@ -183,7 +207,7 @@ struct SignUpView: View {
                                 presentationMode.wrappedValue.dismiss()
                             }) {
                                 Text("Log in")
-                                    .foregroundColor(Color(red: 0.278, green: 0.278, blue: 0.529)) 
+                                    .foregroundColor(Color(red: 0.278, green: 0.278, blue: 0.529))
                                     .fontWeight(.semibold)
                             }
                             Spacer()
@@ -196,6 +220,108 @@ struct SignUpView: View {
                     .padding(.horizontal, 20)
                 }
                 .background(Color.white)
+            }
+        }
+        .alert(isPresented: $showAlert) {
+            Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+        }
+    }
+    
+    // Function to handle the sign up process
+    func signUp() {
+        // Validation checks
+        guard !email.isEmpty, !username.isEmpty, !password.isEmpty else {
+            alertTitle = "Error"
+            alertMessage = "Please fill all fields"
+            showAlert = true
+            return
+        }
+        
+        guard password == confirmPassword else {
+            alertTitle = "Error"
+            alertMessage = "Passwords don't match"
+            showAlert = true
+            return
+        }
+        
+        guard password.count >= 6 else {
+            alertTitle = "Error"
+            alertMessage = "Password should be at least 6 characters"
+            showAlert = true
+            return
+        }
+        
+        isLoading = true
+        
+        let db = Firestore.firestore()
+            db.collection("users").whereField("username", isEqualTo: username).getDocuments { (snapshot, error) in
+                if let error = error {
+                    isLoading = false
+                    alertTitle = "Error"
+                    alertMessage = "Could not verify username availability: \(error.localizedDescription)"
+                    showAlert = true
+                    return
+                }
+                
+                // If documents exist, username is taken
+                if let snapshot = snapshot, !snapshot.documents.isEmpty {
+                    isLoading = false
+                    alertTitle = "Username Taken"
+                    alertMessage = "This username is already in use. Please choose another username."
+                    showAlert = true
+                    return
+                }
+            // Create user with email and password
+            Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
+                isLoading = false
+                
+                if let error = error {
+                    alertTitle = "Sign Up Failed"
+                    alertMessage = error.localizedDescription
+                    showAlert = true
+                    return
+                }
+                
+                guard let user = authResult?.user else {
+                    alertTitle = "Error"
+                    alertMessage = "Failed to create user"
+                    showAlert = true
+                    return
+                }
+                
+                // Update display name
+                let changeRequest = user.createProfileChangeRequest()
+                changeRequest.displayName = username
+                changeRequest.commitChanges { error in
+                    if let error = error {
+                        print("Error updating profile: \(error.localizedDescription)")
+                    }
+                }
+                
+                // Save additional user data to Firestore
+                let db = Firestore.firestore()
+                db.collection("users").document(user.uid).setData([
+                    "username": username,
+                    "email": email,
+                    "uid": user.uid,
+                    "createdAt": Timestamp(date: Date())
+                ]) { error in
+                    if let error = error {
+                        print("Error saving user data: \(error.localizedDescription)")
+                        alertTitle = "Error"
+                        alertMessage = "Account created but failed to save user data"
+                        showAlert = true
+                    } else {
+                        // Success - go back to login
+                        alertTitle = "Success"
+                        alertMessage = "Your account has been created successfully!"
+                        showAlert = true
+                        // You might want to navigate to another view or dismiss this one
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            presentationMode.wrappedValue.dismiss()
+                        }
+                    }
+                }
             }
         }
     }
