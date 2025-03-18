@@ -7,11 +7,12 @@
 
 import UIKit
 import MapKit
+import FirebaseFirestore
 
 class MapViewController: UIViewController {
     
     let mapView = MKMapView()
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.addSubview(mapView)
@@ -25,7 +26,7 @@ class MapViewController: UIViewController {
             mapView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
         
-        // Set an initial location (DO NOT CHANGE)
+        // Set initial location (DO NOT CHANGE)
         let initialLocation = CLLocationCoordinate2D(latitude: 4.602978147636273, longitude: -74.06520670796498)
         let region = MKCoordinateRegion(
             center: initialLocation,
@@ -33,19 +34,51 @@ class MapViewController: UIViewController {
         )
         mapView.setRegion(region, animated: true)
         
-        // Add predefined locations (Recycle Points)
-        let locations: [(name: String, latitude: Double, longitude: Double)] = [
-            ("Recycling Center 1", 4.602800347961165, -74.0659410545649),
-            ("Recycling Center 2", 4.60349359373104, -74.06544967642769),
-            ("Eco Point", 4.603940686676833, -74.06591333578002)
-        ]
-
-        for location in locations {
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
-            annotation.title = location.name
-            annotation.subtitle = "Recycle Point"
-            mapView.addAnnotation(annotation)
+        // Fetch and display locations from Firebase
+        fetchLocations()
+    }
+    
+    func fetchLocations() {
+        let db = Firestore.firestore()
+        
+        db.collection("locations").getDocuments { snapshot, error in
+            if let error = error {
+                print("Error fetching locations: \(error)")
+                return
+            }
+            
+            guard let documents = snapshot?.documents else {
+                print("No locations found")
+                return
+            }
+            
+            // Remove existing annotations before adding new ones
+            DispatchQueue.main.async {
+                self.mapView.removeAnnotations(self.mapView.annotations)
+            }
+            
+            for document in documents {
+                let data = document.data()
+                
+                if let name = data["name"] as? String,
+                   let geoPoint = data["location"] as? GeoPoint { // Extract GeoPoint
+                    
+                    let latitude = geoPoint.latitude
+                    let longitude = geoPoint.longitude
+                    
+                    let annotation = MKPointAnnotation()
+                    annotation.coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+                    annotation.title = name
+                    annotation.subtitle = "Recycle Point"
+                    
+                    print("Added Location: \(name) at (\(latitude), \(longitude))")
+                    
+                    // Add to map on main thread
+                    DispatchQueue.main.async {
+                        self.mapView.addAnnotation(annotation)
+                    }
+                }
+            }
         }
     }
 }
