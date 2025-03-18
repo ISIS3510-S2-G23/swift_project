@@ -10,8 +10,9 @@ import SwiftUI
 struct PointsView: View {
     @State private var searchText: String = ""
     @State private var selectedTab: String = "Near Me"
+    @Binding var selectedView: Int  // Allows switching views
     let categories = ["Near Me", "Challenges", "Rewards"]
-    
+
     var body: some View {
         VStack {
             // Main title and image
@@ -78,26 +79,28 @@ struct PointsView: View {
             }
             .padding(.horizontal, 10)
 
-            // Tab content
-            Group {
-                switch selectedTab {
-                case "Near Me":
-                    NearMeView()
-                case "Challenges":
-                    ChallengesView(selectedTab: $selectedTab) // Pass binding
-                case "Rewards":
-                    RewardsView()
-                default:
-                    EmptyView()
+            // Tab content with AnyView to prevent type inference issues
+            VStack {
+                if selectedTab == "Near Me" {
+                    AnyView(NearMeView())
+                } else if selectedTab == "Challenges" {
+                    AnyView(ChallengesView(selectedTab: $selectedTab))
+                } else if selectedTab == "Rewards" {
+                    AnyView(RewardsView())
+                } else {
+                    AnyView(EmptyView())
                 }
             }
             .padding(.top, 10)
-            
+
             Spacer()
+
+             // Include the tab bar at the bottom
         }
+        .edgesIgnoringSafeArea(.bottom)
     }
 }
 
 #Preview {
-    PointsView()
+    PointsView(selectedView: .constant(1))
 }
