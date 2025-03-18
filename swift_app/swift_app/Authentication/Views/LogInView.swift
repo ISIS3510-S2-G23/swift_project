@@ -5,166 +5,228 @@
 //  Created by Paulina Arrazola on 12/03/25.
 //
 import SwiftUI
+import FirebaseAuth
 
 struct LoginView: View {
     @State private var email: String = "user@gmail.com"
     @State private var password: String = "******"
     @State private var isPasswordVisible: Bool = false
     @Environment(\.presentationMode) var presentationMode
+    @StateObject private var authService = AuthenticationService()
+    @State private var showAlert = false
+    @State private var navigateToHome = false
+    @State private var selectedViewIndex: Int = 0
     
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                // Aquamarine stripe for the top section
-                Color(red: 0.659, green: 0.855, blue: 0.863)
-                    .frame(height: 220)
-                
-                // White background for the rest
-                Color.white
-            }
-            .ignoresSafeArea()
-            
-            VStack(alignment: .leading, spacing: 40) {
-                // Top section with title and subtitle
-                VStack(alignment: .leading, spacing: 10) {
-                    // Back button above the title
-                    Button(action: {
-                        presentationMode.wrappedValue.dismiss()
-                    }) {
-                        Image(systemName: "arrow.left")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                    }
-                    .padding(.top, 20)
+        NavigationStack {  // Proper navigation container for newer SwiftUI
+            ZStack {
+                VStack(spacing: 0) {
+                    // Aquamarine stripe for the top section
+                    Color(red: 0.659, green: 0.855, blue: 0.863)
+                        .frame(height: 220)
                     
-                    Text("Log in")
-                        .font(.system(size: 48, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.top, 5)
-                    
-                    Text("Enter details below and log in")
-                        .font(.system(size: 20))
-                        .foregroundColor(Color.black.opacity(0.6))
-                        .padding(.bottom, 15)
+                    // White background for the rest
+                    Color.white
                 }
-                .padding(.horizontal, 20)
+                .ignoresSafeArea()
                 
-                // Form fields in white area
-                VStack(spacing: 20) {
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("Your email")
-                            .font(.system(size: 16))
-                            .foregroundColor(Color.purple.opacity(0.7))
+                VStack(alignment: .leading, spacing: 40) {
+                    // Top section with title and subtitle
+                    VStack(alignment: .leading, spacing: 10) {
+                        // Back button above the title
+                        Button(action: {
+                            presentationMode.wrappedValue.dismiss()
+                        }) {
+                            Image(systemName: "arrow.left")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                        }
+                        .padding(.top, 20)
                         
-                        TextField("", text: $email)
-                            .padding()
-                            .background(Color.white)
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                            )
+                        Text("Log in")
+                            .font(.system(size: 48, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.top, 5)
+                        
+                        Text("Enter details below and log in")
+                            .font(.system(size: 20))
+                            .foregroundColor(Color.black.opacity(0.6))
+                            .padding(.bottom, 15)
                     }
+                    .padding(.horizontal, 20)
                     
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("Your password")
-                            .font(.system(size: 16))
-                            .foregroundColor(Color.purple.opacity(0.7))
+                    // Form fields in white area
+                    VStack(spacing: 20) {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("Your email")
+                                .font(.system(size: 16))
+                                .foregroundColor(Color.purple.opacity(0.7))
+                            
+                            TextField("", text: $email)
+                                .padding()
+                                .background(Color.white)
+                                .cornerRadius(8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                                )
+                                .keyboardType(.emailAddress)
+                                .autocapitalization(.none)
+                                .disabled(authService.isAuthenticating)
+                        }
                         
-                        ZStack {
-                            if isPasswordVisible {
-                                TextField("", text: $password)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("Your password")
+                                .font(.system(size: 16))
+                                .foregroundColor(Color.purple.opacity(0.7))
+                            
+                            ZStack {
+                                if isPasswordVisible {
+                                    TextField("", text: $password)
+                                        .padding()
+                                        .background(Color.white)
+                                        .cornerRadius(8)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                                        )
+                                        .disabled(authService.isAuthenticating)
+                                } else {
+                                    SecureField("", text: $password)
+                                        .padding()
+                                        .background(Color.white)
+                                        .cornerRadius(8)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                                        )
+                                        .disabled(authService.isAuthenticating)
+                                }
+                                
+                                HStack {
+                                    Spacer()
+                                    Button(action: {
+                                        isPasswordVisible.toggle()
+                                    }) {
+                                        Image(systemName: isPasswordVisible ? "eye.fill" : "eye")
+                                            .foregroundColor(.gray)
+                                    }
+                                    .padding(.trailing, 16)
+                                    .disabled(authService.isAuthenticating)
+                                }
+                            }
+                        }
+                        
+                        Button(action: {
+                            login()
+                        }) {
+                            if authService.isAuthenticating {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .frame(maxWidth: .infinity)
                                     .padding()
-                                    .background(Color.white)
+                                    .background(Color(red: 0.278, green: 0.278, blue: 0.529))
                                     .cornerRadius(8)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                                    )
                             } else {
-                                SecureField("", text: $password)
+                                Text("Log In")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
                                     .padding()
-                                    .background(Color.white)
+                                    .background(Color(red: 0.278, green: 0.278, blue: 0.529))
                                     .cornerRadius(8)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                                    )
+                            }
+                        }
+                        .padding(.top, 10)
+                        .disabled(authService.isAuthenticating || email.isEmpty || password.isEmpty)
+                        
+                        // Account signup text
+                        HStack {
+                            Spacer()
+                            Text("Don't have an account?")
+                                .foregroundColor(.gray)
+                            
+                            NavigationLink(destination: SignUpView().navigationBarBackButtonHidden(true)) {
+                                Text("Sign up")
+                                    .foregroundColor(Color(red: 0.278, green: 0.278, blue: 0.529))
+                                    .fontWeight(.semibold)
+                            }
+                            Spacer()
+                        }
+                        .padding(.top, 5)
+                        
+                        // Or login with section
+                        HStack {
+                            VStack {
+                                Divider()
                             }
                             
-                            HStack {
-                                Spacer()
-                                Button(action: {
-                                    isPasswordVisible.toggle()
-                                }) {
-                                    Image(systemName: isPasswordVisible ? "eye.fill" : "eye")
-                                        .foregroundColor(.gray)
-                                }
-                                .padding(.trailing, 16)
+                            Text("Or login with")
+                                .foregroundColor(.gray)
+                                .padding(.horizontal, 10)
+                            
+                            VStack {
+                                Divider()
                             }
                         }
-                    }
-                    
-                    Button(action: {
-                        // Handle login action
-                    }) {
-                        Image("Long Login")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxWidth: .infinity)
-                    }
-                    .padding(.top, 10)
-                    
-                    // Account signup text
-                    HStack {
-                        Spacer()
-                        Text("Don't have an account?")
-                            .foregroundColor(.gray)
+                        .padding(.vertical, 20)
                         
-                        NavigationLink(destination: SignUpView().navigationBarBackButtonHidden(true)) {
-                            Text("Sign up")
-                                .foregroundColor(Color(red: 0.278, green: 0.278, blue: 0.529))
-                                .fontWeight(.semibold)
-                        }
-                        Spacer()
-                    }
-                    .padding(.top, 5)
-                    
-                    // Or login with section
-                    HStack {
-                        VStack {
-                            Divider()
+                        // Google login button
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                loginWithGoogle()
+                            }) {
+                                Image("Google logo")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 30, height: 30)
+                            }
+                            .disabled(authService.isAuthenticating)
+                            Spacer()
                         }
                         
-                        Text("Or login with")
-                            .foregroundColor(.gray)
-                            .padding(.horizontal, 10)
-                        
-                        VStack {
-                            Divider()
-                        }
-                    }
-                    .padding(.vertical, 20)
-                    
-                    // Google login button
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            // Handle Google login
-                        }) {
-                            Image("Google logo")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 30, height: 30)
-                        }
                         Spacer()
                     }
-                    
-                    Spacer()
+                    .padding(.top, 20)
+                    .padding(.horizontal, 20)
+                    .background(Color.white)
                 }
-                .padding(.top, 20)
-                .padding(.horizontal, 20)
-                .background(Color.white)
+                
+                // Navigation after successful authentication
+                .navigationDestination(isPresented: $navigateToHome) {
+                    PointsView(selectedView: $selectedViewIndex)
+                        .navigationBarBackButtonHidden(true)
+                }
+            }
+            .alert(isPresented: $showAlert) {
+                Alert(
+                    title: Text("Error"),
+                    message: Text(authService.error ?? "An unknown error occurred"),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
+        }
+    }
+    
+    private func login() {
+        authService.signIn(email: email, password: password) { success in
+            if success {
+                // On successful login
+                navigateToHome = true
+            } else {
+                showAlert = true
+            }
+        }
+    }
+    
+    private func loginWithGoogle() {
+        authService.signInWithGoogle { success in
+            if success {
+                // On successful Google login
+                navigateToHome = true
+            } else {
+                showAlert = true
             }
         }
     }
