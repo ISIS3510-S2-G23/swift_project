@@ -86,7 +86,7 @@ struct PointsView: View {
                 } else if selectedTab == "Challenges" {
                     AnyView(ChallengesView(selectedTab: $selectedTab))
                 } else if selectedTab == "Rewards" {
-                    AnyView(RewardsView())
+                    AnyView(RewardsView(selectedTab: $selectedTab))
                 } else {
                     AnyView(EmptyView())
                 }

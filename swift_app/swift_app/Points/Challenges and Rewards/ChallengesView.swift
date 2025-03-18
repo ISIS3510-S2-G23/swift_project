@@ -12,12 +12,13 @@ struct ChallengesView: View {
     @Binding var selectedTab: String
 
     @State private var selectedChallenge: Challenge?
+    @State private var selectedChallenge2: Challenge?
 
     var body: some View {
         ZStack {
             VStack {
                 ForEach(viewModel.challenges) { challenge in
-                    ChallengeCardView(challenge: challenge, selectedChallenge: $selectedChallenge)
+                    ChallengeCardView(challenge: challenge, selectedChallenge: $selectedChallenge, selectedChallenge2: $selectedChallenge2)
                 }
             }
             .padding(.top, 10)
@@ -33,6 +34,19 @@ struct ChallengesView: View {
                     selectedTab: $selectedTab 
                 )
             }
+            
+            if let challenge = selectedChallenge2 {
+                RegisterVisitPopUpView(
+                    isPresented2: Binding(
+                        get: { selectedChallenge2 != nil },
+                        set: { if !$0 { selectedChallenge2 = nil } }
+                    ),
+                    challenge: challenge,
+                    selectedTab: $selectedTab
+                )
+            }
+            
+            
         }
     }
 }
