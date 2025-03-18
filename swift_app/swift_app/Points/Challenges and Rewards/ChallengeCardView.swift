@@ -10,6 +10,7 @@ import SwiftUI
 struct ChallengeCardView: View {
     let challenge: Challenge
     @Binding var selectedChallenge: Challenge?
+    @Binding var selectedChallenge2: Challenge?
 
     var body: some View {
         HStack {
@@ -35,7 +36,7 @@ struct ChallengeCardView: View {
                     Spacer()
                     if !challenge.isCompleted {
                         Button(action: {
-                            // Action for registering visit
+                            selectedChallenge2 = challenge
                         }) {
                             HStack {
                                 Image(systemName: "plus")

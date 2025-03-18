@@ -14,4 +14,5 @@ struct Challenge: Identifiable {
     let isCompleted: Bool
     let expirationDate: String
     let reward: String
+    let description: String
 }
