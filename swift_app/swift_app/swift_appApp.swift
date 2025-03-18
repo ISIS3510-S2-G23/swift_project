@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseCore
 
 @main
 struct swift_appApp: App {
@@ -13,5 +14,9 @@ struct swift_appApp: App {
         WindowGroup {
             OptionsView()
         }
+        
     }
+    init() {
+          FirebaseApp.configure()
+      }
 }
