@@ -34,7 +34,7 @@ struct MainTabView: View {
             // Custom Tab Bar
             TabBarView(selectedView: $selectedView)
         }
-        .edgesIgnoringSafeArea(.bottom) // Ensures TabBar is always at the bottom
+        .edgesIgnoringSafeArea(.bottom)
     }
 }
 

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct NearMeView: View {
     var body: some View {
-        VStack(alignment: .leading) { // Ensure left alignment
+        VStack(alignment: .leading) { 
             Text("Recycle points near you")
                 .font(.headline)
 
@@ -18,7 +18,7 @@ struct NearMeView: View {
                 .cornerRadius(12)
         }
         .padding(10)
-        .frame(width: 350) // Ensures the background does not expand
+        .frame(width: 350)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color.white)
