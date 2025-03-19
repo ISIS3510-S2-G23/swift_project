@@ -1,10 +1,3 @@
-//
-//  ChallengesView.swift
-//  swift_app
-//
-//  Created by Juan Sebastian Pardo on 3/16/25.
-//
-
 import SwiftUI
 
 struct ChallengesView: View {
@@ -18,12 +11,15 @@ struct ChallengesView: View {
         ZStack {
             VStack {
                 ForEach(viewModel.challenges) { challenge in
-                    ChallengeCardView(challenge: challenge, selectedChallenge: $selectedChallenge, selectedChallenge2: $selectedChallenge2)
+                    ChallengeCardView(
+                        challenge: challenge,
+                        selectedChallenge: $selectedChallenge,
+                        selectedChallenge2: $selectedChallenge2
+                    )
                 }
             }
             .padding(.top, 10)
 
-            
             if let challenge = selectedChallenge {
                 ChallengePopUpView(
                     isPresented: Binding(
@@ -31,10 +27,10 @@ struct ChallengesView: View {
                         set: { if !$0 { selectedChallenge = nil } }
                     ),
                     challenge: challenge,
-                    selectedTab: $selectedTab 
+                    selectedTab: $selectedTab
                 )
             }
-            
+
             if let challenge = selectedChallenge2 {
                 RegisterVisitPopUpView(
                     isPresented2: Binding(
@@ -42,11 +38,10 @@ struct ChallengesView: View {
                         set: { if !$0 { selectedChallenge2 = nil } }
                     ),
                     challenge: challenge,
-                    selectedTab: $selectedTab
+                    selectedTab: $selectedTab,
+                    viewModel: viewModel // Passing the view model
                 )
             }
-            
-            
         }
     }
 }

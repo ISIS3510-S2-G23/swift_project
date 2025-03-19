@@ -26,7 +26,7 @@ class MapViewController: UIViewController {
             mapView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
         
-        // Set initial location (DO NOT CHANGE)
+        // Set initial location (DO NOT CHANGE FOR NOW)
         let initialLocation = CLLocationCoordinate2D(latitude: 4.602978147636273, longitude: -74.06520670796498)
         let region = MKCoordinateRegion(
             center: initialLocation,
