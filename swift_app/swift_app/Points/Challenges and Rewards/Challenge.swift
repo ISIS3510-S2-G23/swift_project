@@ -7,6 +7,7 @@
 
 import Foundation
 
+//Model for the Challenge object in the app. It is the main structure that is passed around in the Points View and its sub-views
 struct Challenge: Identifiable {
     let id = UUID()
     

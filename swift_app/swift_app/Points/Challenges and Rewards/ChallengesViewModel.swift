@@ -115,16 +115,16 @@ class ChallengesViewModel: ObservableObject {
     //Function for updating a single challenge's progress. It will be called from the RegisterPopUpView "Register" button
     func updateProgressChallenge(pChallenge: Challenge, newProgress: Int) {
         
-        
+        print("UPDATE PROGRESS CHALLENGE WAS JUST CLICKED")
         //CODIGO PARA CUANDO TENGAMOS LAS COSAS FUNCIONALES
         //let db = Firestore.firestore()
         //let complete_id = pChallenge.complete_id
         //let newComplete = newProgress == 100 ? 1 : 0
-        
+        //let newProgess_decimal = newProgress / 100
         //let documentRef = db.collection("users-challenges").document(complete_id)
         
         //documentRef.updateData([
-        //    "progress": newProgress,
+        //    "progress": newProgess_decimal,
         //    "completed": newComplete
         //]) { error in
         //    if let error = error {

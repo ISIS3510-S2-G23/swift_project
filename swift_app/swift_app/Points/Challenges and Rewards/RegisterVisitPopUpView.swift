@@ -7,6 +7,9 @@ struct RegisterVisitPopUpView: View {
     @State private var inputText: String = ""
     @State private var showCamera = false
     @State private var capturedImage: UIImage?
+    
+    // Add viewModel
+    let viewModel: ChallengesViewModel
 
     var body: some View {
         ZStack {
@@ -58,6 +61,8 @@ struct RegisterVisitPopUpView: View {
                     .foregroundStyle(.gray)
 
                 Button(action: {
+                    // Call updateProgressChallenge when register is clicked. CHANGE THE VALUE DEPNDING ON WHAT THE IMAGE API GIVES
+                    viewModel.updateProgressChallenge(pChallenge: challenge, newProgress: 100)
                     isPresented2 = false
                 }) {
                     Text("Register")
