@@ -48,9 +48,22 @@
 		093806152D43ED51008D011B /* swift_appUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = swift_appUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		09AAD1122D8CCE0900E3E731 /* Exceptions for "swift_app" folder in "swift_app" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"swift-app-Info.plist",
+			);
+			target = 093805FA2D43ED50008D011B /* swift_app */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		093805FD2D43ED50008D011B /* swift_app */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				09AAD1122D8CCE0900E3E731 /* Exceptions for "swift_app" folder in "swift_app" target */,
+			);
 			path = swift_app;
 			sourceTree = "<group>";
 		};
@@ -453,7 +466,11 @@
 				DEVELOPMENT_TEAM = 23X44MPH4Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "swift-app-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to take photos";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location for continuous tracking.";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "We need your location even when the app is in the background.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to show nearby recycle points.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -483,7 +500,11 @@
 				DEVELOPMENT_TEAM = 23X44MPH4Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "swift-app-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to take photos";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location for continuous tracking.";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "We need your location even when the app is in the background.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to show nearby recycle points.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

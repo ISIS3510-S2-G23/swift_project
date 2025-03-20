@@ -8,10 +8,12 @@
 import UIKit
 import MapKit
 import FirebaseFirestore
+import CoreLocation
 
-class MapViewController: UIViewController {
+class MapViewController: UIViewController, CLLocationManagerDelegate {
     
     let mapView = MKMapView()
+    let locationManager = CLLocationManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,16 +28,62 @@ class MapViewController: UIViewController {
             mapView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
         
-        // Set initial location (DO NOT CHANGE FOR NOW)
-        let initialLocation = CLLocationCoordinate2D(latitude: 4.602978147636273, longitude: -74.06520670796498)
-        let region = MKCoordinateRegion(
-            center: initialLocation,
-            span: MKCoordinateSpan(latitudeDelta: 0.0015, longitudeDelta: 0.0015)
-        )
-        mapView.setRegion(region, animated: true)
+        // Setup location manager first
+        setupLocationManager()
+        
+        // Enable user tracking
+        mapView.showsUserLocation = true
+        mapView.userTrackingMode = .follow
+        
+        // Check if we already have a location
+        if let userLocation = locationManager.location {
+            centerMapOnLocation(userLocation)
+        }
         
         // Fetch and display locations from Firebase
         fetchLocations()
+    }
+    
+    func setupLocationManager() {
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        locationManager.allowsBackgroundLocationUpdates = true
+        locationManager.pausesLocationUpdatesAutomatically = false
+        locationManager.requestAlwaysAuthorization()
+        locationManager.startUpdatingLocation()
+    }
+    
+    // Add a helper function to center the map
+    func centerMapOnLocation(_ location: CLLocation) {
+        let region = MKCoordinateRegion(
+            center: location.coordinate,
+            span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
+        )
+        mapView.setRegion(region, animated: true)
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        switch status {
+        case .authorizedAlways, .authorizedWhenInUse:
+            print("✅ Location access granted")
+            locationManager.startUpdatingLocation()
+            
+            // Immediately center map if location is available
+            if let userLocation = locationManager.location {
+                centerMapOnLocation(userLocation)
+            }
+        case .denied, .restricted:
+            print("❌ Location access denied")
+        case .notDetermined:
+            print("⏳ Waiting for user to grant permission")
+        @unknown default:
+            break
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let userLocation = locations.last else { return }
+        centerMapOnLocation(userLocation)
     }
     
     func fetchLocations() {
@@ -52,7 +100,6 @@ class MapViewController: UIViewController {
                 return
             }
             
-            // Remove existing annotations before adding new ones
             DispatchQueue.main.async {
                 self.mapView.removeAnnotations(self.mapView.annotations)
             }
@@ -61,7 +108,7 @@ class MapViewController: UIViewController {
                 let data = document.data()
                 
                 if let name = data["name"] as? String,
-                   let geoPoint = data["location"] as? GeoPoint { // Extract GeoPoint
+                   let geoPoint = data["location"] as? GeoPoint {
                     
                     let latitude = geoPoint.latitude
                     let longitude = geoPoint.longitude
@@ -73,7 +120,6 @@ class MapViewController: UIViewController {
                     
                     print("Added Location: \(name) at (\(latitude), \(longitude))")
                     
-                    // Add to map on main thread
                     DispatchQueue.main.async {
                         self.mapView.addAnnotation(annotation)
                     }
@@ -82,6 +128,7 @@ class MapViewController: UIViewController {
         }
     }
 }
+
 
 // MARK: - SwiftUI Wrapper for MapViewController
 import SwiftUI
