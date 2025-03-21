@@ -12,7 +12,7 @@ import FirebaseCore
 struct swift_appApp: App {
     var body: some Scene {
         WindowGroup {
-            OptionsView()
+            WelcomeView1()
         }
         
     }

@@ -3,13 +3,14 @@
 //  swift_app
 //
 //  Created by Paulina Arrazola on 12/03/25.
-//
-import SwiftUI
+//import SwiftUI
 import FirebaseAuth
+import SwiftUICore
+import SwiftUI
 
 struct LoginView: View {
-    @State private var email: String = "user@gmail.com"
-    @State private var password: String = "******"
+    @State private var email: String = ""
+    @State private var password: String = ""
     @State private var isPasswordVisible: Bool = false
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var authService = AuthenticationService()
@@ -18,12 +19,12 @@ struct LoginView: View {
     @State private var selectedViewIndex: Int = 0
     
     var body: some View {
-        NavigationStack {  // Proper navigation container for newer SwiftUI
+        NavigationStack {
             ZStack {
                 VStack(spacing: 0) {
                     // Aquamarine stripe for the top section
                     Color(red: 0.659, green: 0.855, blue: 0.863)
-                        .frame(height: 220)
+                        .frame(height: 230)
                     
                     // White background for the rest
                     Color.white
@@ -72,6 +73,7 @@ struct LoginView: View {
                                 )
                                 .keyboardType(.emailAddress)
                                 .autocapitalization(.none)
+                                .textInputAutocapitalization(.never) // Prevents auto-capitalization
                                 .disabled(authService.isAuthenticating)
                         }
                         
@@ -90,6 +92,7 @@ struct LoginView: View {
                                             RoundedRectangle(cornerRadius: 8)
                                                 .stroke(Color.gray.opacity(0.2), lineWidth: 1)
                                         )
+                                        .textInputAutocapitalization(.never) // Ensures no auto-capitalization
                                         .disabled(authService.isAuthenticating)
                                 } else {
                                     SecureField("", text: $password)
@@ -100,6 +103,7 @@ struct LoginView: View {
                                             RoundedRectangle(cornerRadius: 8)
                                                 .stroke(Color.gray.opacity(0.2), lineWidth: 1)
                                         )
+                                        .textInputAutocapitalization(.never) // Ensures no auto-capitalization
                                         .disabled(authService.isAuthenticating)
                                 }
                                 
@@ -212,7 +216,6 @@ struct LoginView: View {
     private func login() {
         authService.signIn(email: email, password: password) { success in
             if success {
-                // On successful login
                 navigateToHome = true
             } else {
                 showAlert = true
@@ -223,7 +226,6 @@ struct LoginView: View {
     private func loginWithGoogle() {
         authService.signInWithGoogle { success in
             if success {
-                // On successful Google login
                 navigateToHome = true
             } else {
                 showAlert = true

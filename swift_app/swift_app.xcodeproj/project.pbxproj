@@ -48,22 +48,9 @@
 		093806152D43ED51008D011B /* swift_appUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = swift_appUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		09AAD1122D8CCE0900E3E731 /* Exceptions for "swift_app" folder in "swift_app" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				"swift-app-Info.plist",
-			);
-			target = 093805FA2D43ED50008D011B /* swift_app */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		093805FD2D43ED50008D011B /* swift_app */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				09AAD1122D8CCE0900E3E731 /* Exceptions for "swift_app" folder in "swift_app" target */,
-			);
 			path = swift_app;
 			sourceTree = "<group>";
 		};
