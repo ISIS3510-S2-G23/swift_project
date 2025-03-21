@@ -13,7 +13,7 @@ struct NearMeView: View {
             Text("Recycle points near you")
                 .font(.headline)
 
-            MapViewControllerWrapper()
+            MapViewModelWrapper()
                 .frame(width: 320, height: 400)
                 .cornerRadius(12)
         }

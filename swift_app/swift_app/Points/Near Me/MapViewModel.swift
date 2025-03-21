@@ -10,7 +10,7 @@ import MapKit
 import FirebaseFirestore
 import CoreLocation
 
-class MapViewController: UIViewController, CLLocationManagerDelegate {
+class MapViewModel: UIViewController, CLLocationManagerDelegate {
     
     let mapView = MKMapView()
     let locationManager = CLLocationManager()
@@ -65,7 +65,7 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         switch status {
         case .authorizedAlways, .authorizedWhenInUse:
-            print("✅ Location access granted")
+            print("Location access granted")
             locationManager.startUpdatingLocation()
             
             // Immediately center map if location is available
@@ -73,9 +73,9 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
                 centerMapOnLocation(userLocation)
             }
         case .denied, .restricted:
-            print("❌ Location access denied")
+            print("Location access denied")
         case .notDetermined:
-            print("⏳ Waiting for user to grant permission")
+            print("Waiting for user to grant permission")
         @unknown default:
             break
         }
@@ -133,12 +133,12 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
 // MARK: - SwiftUI Wrapper for MapViewController
 import SwiftUI
 
-struct MapViewControllerWrapper: UIViewControllerRepresentable {
-    func makeUIViewController(context: Context) -> MapViewController {
-        return MapViewController()
+struct MapViewModelWrapper: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> MapViewModel {
+        return MapViewModel()
     }
 
-    func updateUIViewController(_ uiViewController: MapViewController, context: Context) {
+    func updateUIViewController(_ uiViewController: MapViewModel, context: Context) {
         // No update needed for a static map
     }
 }
