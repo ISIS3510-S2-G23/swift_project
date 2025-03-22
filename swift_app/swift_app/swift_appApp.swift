@@ -6,12 +6,17 @@
 //
 
 import SwiftUI
+import FirebaseCore
 
 @main
 struct swift_appApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            WelcomeView1()
         }
+        
     }
+    init() {
+          FirebaseApp.configure()
+      }
 }
