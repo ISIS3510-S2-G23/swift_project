@@ -4,7 +4,9 @@
 //
 //  Created by Paulina Arrazola on 12/03/25.
 //
+
 import SwiftUI
+import Firebase
 import FirebaseAuth
 import FirebaseFirestore
 
@@ -24,15 +26,19 @@ struct SignUpView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
+                // Aquamarine stripe for the top section
                 Color(red: 0.659, green: 0.855, blue: 0.863)
                     .frame(height: 230)
                 
+                // White background for the rest
                 Color.white
             }
             .ignoresSafeArea()
             
             VStack(alignment: .leading, spacing: 0) {
+                // Top section with title and subtitle
                 VStack(alignment: .leading, spacing: 10) {
+                    // Back button above the title
                     Button(action: {
                         presentationMode.wrappedValue.dismiss()
                     }) {
@@ -50,10 +56,11 @@ struct SignUpView: View {
                     Text("Enter details below and sign up")
                         .font(.system(size: 20))
                         .foregroundColor(Color.black.opacity(0.6))
-                        .padding(.bottom, 30)
+                        .padding(.bottom, 20)
                 }
                 .padding(.horizontal, 20)
                 
+                // Form fields in white area
                 ScrollView {
                     VStack(spacing: 20) {
                         VStack(alignment: .leading, spacing: 5) {
@@ -64,7 +71,6 @@ struct SignUpView: View {
                             TextField("", text: $email)
                                 .keyboardType(.emailAddress)
                                 .autocapitalization(.none)
-                                .textInputAutocapitalization(.never) // Prevents auto-capitalization
                                 .padding()
                                 .background(Color.white)
                                 .cornerRadius(8)
@@ -81,7 +87,6 @@ struct SignUpView: View {
                             
                             TextField("", text: $username)
                                 .autocapitalization(.none)
-                                .textInputAutocapitalization(.never) // Prevents auto-capitalization
                                 .padding()
                                 .background(Color.white)
                                 .cornerRadius(8)
@@ -100,7 +105,6 @@ struct SignUpView: View {
                                 if isPasswordVisible {
                                     TextField("", text: $password)
                                         .autocapitalization(.none)
-                                        .textInputAutocapitalization(.never) // Prevents auto-capitalization
                                         .padding()
                                         .background(Color.white)
                                         .cornerRadius(8)
@@ -110,7 +114,7 @@ struct SignUpView: View {
                                         )
                                 } else {
                                     SecureField("", text: $password)
-                                        .textInputAutocapitalization(.never) // Prevents auto-capitalization
+                                        .autocapitalization(.none)
                                         .padding()
                                         .background(Color.white)
                                         .cornerRadius(8)
@@ -142,7 +146,6 @@ struct SignUpView: View {
                                 if isConfirmPasswordVisible {
                                     TextField("", text: $confirmPassword)
                                         .autocapitalization(.none)
-                                        .textInputAutocapitalization(.never) // Prevents auto-capitalization
                                         .padding()
                                         .background(Color.white)
                                         .cornerRadius(8)
@@ -152,7 +155,7 @@ struct SignUpView: View {
                                         )
                                 } else {
                                     SecureField("", text: $confirmPassword)
-                                        .textInputAutocapitalization(.never) // Prevents auto-capitalization
+                                        .autocapitalization(.none)
                                         .padding()
                                         .background(Color.white)
                                         .cornerRadius(8)
@@ -197,6 +200,7 @@ struct SignUpView: View {
                         }
                         .padding(.top, 10)
                         
+                        // Account login text - CORRECTED SECTION
                         HStack {
                             Spacer()
                             Text("Already have an account?")
@@ -224,7 +228,9 @@ struct SignUpView: View {
         }
     }
     
+    // Function to handle the sign up process
     func signUp() {
+        // Validation checks
         guard !email.isEmpty, !username.isEmpty, !password.isEmpty else {
             alertTitle = "Error"
             alertMessage = "Please fill all fields"
@@ -247,21 +253,76 @@ struct SignUpView: View {
         }
         
         isLoading = true
-        let db = Firestore.firestore()
         
-        db.collection("users").whereField("username", isEqualTo: username).getDocuments { (snapshot, error) in
-            isLoading = false
-            if let error = error {
-                alertTitle = "Error"
-                alertMessage = "Could not verify username availability: \(error.localizedDescription)"
-                showAlert = true
-                return
-            }
-            
-            if let snapshot = snapshot, !snapshot.documents.isEmpty {
-                alertTitle = "Username Taken"
-                alertMessage = "This username is already in use. Please choose another username."
-                showAlert = true
+        let db = Firestore.firestore()
+            db.collection("users").whereField("username", isEqualTo: username).getDocuments { (snapshot, error) in
+                if let error = error {
+                    isLoading = false
+                    alertTitle = "Error"
+                    alertMessage = "Could not verify username availability: \(error.localizedDescription)"
+                    showAlert = true
+                    return
+                }
+                
+                // If documents exist, username is taken
+                if let snapshot = snapshot, !snapshot.documents.isEmpty {
+                    isLoading = false
+                    alertTitle = "Username Taken"
+                    alertMessage = "This username is already in use. Please choose another username."
+                    showAlert = true
+                    return
+                }
+            // Create user with email and password
+            Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
+                isLoading = false
+                
+                if let error = error {
+                    alertTitle = "Sign Up Failed"
+                    alertMessage = error.localizedDescription
+                    showAlert = true
+                    return
+                }
+                
+                guard let user = authResult?.user else {
+                    alertTitle = "Error"
+                    alertMessage = "Failed to create user"
+                    showAlert = true
+                    return
+                }
+                
+                // Update display name
+                let changeRequest = user.createProfileChangeRequest()
+                changeRequest.displayName = username
+                changeRequest.commitChanges { error in
+                    if let error = error {
+                        print("Error updating profile: \(error.localizedDescription)")
+                    }
+                }
+                
+                // Save additional user data to Firestore
+                let db = Firestore.firestore()
+                db.collection("users").document(user.uid).setData([
+                    "username": username,
+                    "email": email,
+                    "uid": user.uid,
+                    "createdAt": Timestamp(date: Date())
+                ]) { error in
+                    if let error = error {
+                        print("Error saving user data: \(error.localizedDescription)")
+                        alertTitle = "Error"
+                        alertMessage = "Account created but failed to save user data"
+                        showAlert = true
+                    } else {
+                        // Success - go back to login
+                        alertTitle = "Success"
+                        alertMessage = "Your account has been created successfully!"
+                        showAlert = true
+                        // You might want to navigate to another view or dismiss this one
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            presentationMode.wrappedValue.dismiss()
+                        }
+                    }
+                }
             }
         }
     }
