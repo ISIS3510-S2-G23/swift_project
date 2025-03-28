@@ -10,14 +10,15 @@ struct RegisterVisitPopUpView: View {
     
     // Add viewModel
     let viewModel: ChallengesViewModel
+    @StateObject private var cameraLogic = CameraLogic()
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0)
-                .edgesIgnoringSafeArea(.all)
-                .onTapGesture {
-                    isPresented2 = false
-                }
+                    Color.black.opacity(0)
+                        .edgesIgnoringSafeArea(.all)
+                        .onTapGesture {
+                            isPresented2 = false
+                        }
 
             VStack(spacing: 15) {
                 Text("Register visit")
@@ -31,17 +32,53 @@ struct RegisterVisitPopUpView: View {
 
                 // Button to Open Camera
                 Button(action: {
-                    showCamera = true
-                }) {
-                    Text("Open Camera")
-                        .foregroundColor(.ecoMainPurple)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
-                        .background(.ecoLightPurple)
-                        .cornerRadius(15)
+                                    showCamera = true
+                                }) {
+                                    Text("Open Camera")
+                                        .foregroundColor(.ecoMainPurple)
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 10)
+                                        .background(.ecoLightPurple)
+                                        .cornerRadius(15)
+                                }
+                                .sheet(isPresented: $showCamera) {
+                                    ImagePicker(isPresented: $showCamera, selectedImage: $capturedImage)
+                                }
+                                // Updated onChange to use new syntax
+                                .onChange(of: capturedImage) { _, newImage in
+                                    cameraLogic.capturedImage = newImage
+                                }
+
+                // Image Analysis Section
+                if capturedImage != nil {
+                    Button(action: {
+                        cameraLogic.analyzeImage()
+                    }) {
+                        Text("Analyze Image")
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(.ecoMainPurple)
+                            .cornerRadius(15)
+                    }
                 }
-                .sheet(isPresented: $showCamera) {
-                    ImagePicker(isPresented: $showCamera, selectedImage: $capturedImage)
+
+                // Show analysis result or loading
+                if cameraLogic.isAnalyzing {
+                    ProgressView()
+                } else if let analysisResult = cameraLogic.analysisResult {
+                    ScrollView {
+                        Text("Analysis Result:")
+                            .font(.headline)
+                        Text(analysisResult)
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                            .padding()
+                    }
+                    .frame(maxHeight: 100)
+                } else if let errorMessage = cameraLogic.errorMessage {
+                    Text("Error: \(errorMessage)")
+                        .foregroundColor(.red)
                 }
 
                 Text("Provide the code given by the recycle point manager")
@@ -61,7 +98,6 @@ struct RegisterVisitPopUpView: View {
                     .foregroundStyle(.gray)
 
                 Button(action: {
-                    // Call updateProgressChallenge when register is clicked. CHANGE THE VALUE DEPNDING ON WHAT THE IMAGE API GIVES
                     viewModel.updateProgressChallenge(pChallenge: challenge, newProgress: 100)
                     isPresented2 = false
                 }) {
@@ -75,7 +111,7 @@ struct RegisterVisitPopUpView: View {
             }
         }
         .padding(7)
-        .frame(width: 320, height: 330)
+        .frame(width: 320, height: 450)
         .background(Color.white)
         .cornerRadius(20)
         .shadow(radius: 10)
