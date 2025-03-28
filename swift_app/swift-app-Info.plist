@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>KEY_ECOSPHERE</key>
-	<string>"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"</string>
+	<string>$(KEY_ECOSPHERE)</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
