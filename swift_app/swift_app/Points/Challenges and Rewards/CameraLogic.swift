@@ -46,7 +46,7 @@ class OpenAIService {
         
         // Prepare the request body
         let body: [String: Any] = [
-            "model": "gpt-4-vision-preview",
+            "model": "gpt-4o",
             "messages": [
                 [
                     "role": "user",
