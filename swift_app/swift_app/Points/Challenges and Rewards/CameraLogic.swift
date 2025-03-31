@@ -5,22 +5,21 @@
 //  Created by Paulina Arrazola on 26/03/25.
 //
 
-import Foundation
+import SwiftUI
 import UIKit
 
 class OpenAIService {
     private let apiKey: String
     
     init() {
-        // Retrieve API key from Info.plist using the original key name
+        // Retrieve API key from Info.plist
         guard let key = Bundle.main.infoDictionary?["KEY_ECOSPHERE"] as? String else {
             fatalError("OpenAI API Key not found in Info.plist")
         }
         self.apiKey = key
     }
     
-    func analyzeImage(_ image: UIImage, completion: @escaping (Result<String, Error>) -> Void) {
-        // Ensure the image can be converted to base64
+    func analyzeImage(_ image: UIImage, challengeDescription: String, completion: @escaping (Result<String, Error>) -> Void) {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
             completion(.failure(NSError(domain: "ImageConversionError",
                                         code: -1,
@@ -28,10 +27,8 @@ class OpenAIService {
             return
         }
         
-        // Base64 encode the image
         let base64Image = imageData.base64EncodedString()
         
-        // Prepare the API request
         guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else {
             completion(.failure(NSError(domain: "URLError",
                                         code: -1,
@@ -44,19 +41,22 @@ class OpenAIService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         
-        // Prepare the request body
         let body: [String: Any] = [
             "model": "gpt-4o",
             "messages": [
                 [
+                    "role": "system",
+                    "content": "You are an AI assistant that evaluates whether a submitted image correctly reflects a given challenge. Provide a short response: 'Yes' if it matches, 'No' if it does not, and a brief explanation if No."
+                ],
+                [
                     "role": "user",
                     "content": [
-                        ["type": "text", "text": "Carefully examine the image and describe what you see in detail."],
+                        ["type": "text", "text": "Challenge description: \(challengeDescription). Does this image correctly reflect the challenge being completed?"],
                         ["type": "image_url", "image_url": ["url": "data:image/jpeg;base64,\(base64Image)"]]
                     ]
                 ]
             ],
-            "max_tokens": 300
+            "max_tokens": 50
         ]
         
         do {
@@ -66,46 +66,29 @@ class OpenAIService {
             return
         }
         
-        // Perform the network request
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-            // Error handling
             if let error = error {
                 completion(.failure(error))
                 return
             }
             
-            // Check for HTTP response
             guard let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode) else {
-                // If response is not successful, create a specific error
-                let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+                  (200...299).contains(httpResponse.statusCode),
+                  let data = data else {
                 completion(.failure(NSError(domain: "APIError",
-                                            code: statusCode,
-                                            userInfo: [NSLocalizedDescriptionKey: "Invalid response from server (Status Code: \(statusCode))"])))
-                return
-            }
-            
-            // Parse the response
-            guard let data = data else {
-                completion(.failure(NSError(domain: "DataError",
                                             code: -1,
-                                            userInfo: [NSLocalizedDescriptionKey: "No data received"])))
+                                            userInfo: [NSLocalizedDescriptionKey: "Invalid response from server"])))
                 return
             }
             
             do {
-                // Print raw response for debugging
-                if let responseString = String(data: data, encoding: .utf8) {
-                    print("Raw Response: \(responseString)")
-                }
-                
-                // Parse JSON response
                 if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
                    let choices = json["choices"] as? [[String: Any]],
                    let firstChoice = choices.first,
                    let message = firstChoice["message"] as? [String: Any],
                    let content = message["content"] as? String {
-                    completion(.success(content))
+                    
+                    completion(.success(content.trimmingCharacters(in: .whitespacesAndNewlines)))
                 } else {
                     completion(.failure(NSError(domain: "ParsingError",
                                                 code: -1,
@@ -117,6 +100,7 @@ class OpenAIService {
         }
         task.resume()
     }
+    
 }
 
 class CameraLogic: ObservableObject {
@@ -124,29 +108,26 @@ class CameraLogic: ObservableObject {
     @Published var analysisResult: String?
     @Published var isAnalyzing: Bool = false
     @Published var errorMessage: String?
-    
-    private let openAIService: OpenAIService
-    
-    init() {
-        self.openAIService = OpenAIService()
-    }
-    
-    func analyzeImage() {
+
+    private let openAIService = OpenAIService()
+
+    func analyzeImage(challengeDescription: String) {
         guard let image = capturedImage else {
             errorMessage = "No image captured"
             return
         }
-        
+
         isAnalyzing = true
         errorMessage = nil
-        
-        openAIService.analyzeImage(image) { [weak self] result in
+
+        openAIService.analyzeImage(image, challengeDescription: challengeDescription) { [weak self] result in
             DispatchQueue.main.async {
                 self?.isAnalyzing = false
-                
+
                 switch result {
-                case .success(let analysis):
-                    self?.analysisResult = analysis
+                case .success(let response):
+                    // Directly use the response string (No need to join keywords)
+                    self?.analysisResult = "Response: \(response)"
                 case .failure(let error):
                     self?.errorMessage = error.localizedDescription
                     print("Image Analysis Error: \(error)")
@@ -155,3 +136,5 @@ class CameraLogic: ObservableObject {
         }
     }
 }
+
+

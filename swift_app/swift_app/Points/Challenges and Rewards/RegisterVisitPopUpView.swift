@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct RegisterVisitPopUpView: View {
     @Binding var isPresented2: Bool
@@ -52,7 +53,7 @@ struct RegisterVisitPopUpView: View {
                 // Image Analysis Section
                 if capturedImage != nil {
                     Button(action: {
-                        cameraLogic.analyzeImage()
+                        cameraLogic.analyzeImage(challengeDescription: challenge.description)
                     }) {
                         Text("Analyze Image")
                             .foregroundColor(.white)
