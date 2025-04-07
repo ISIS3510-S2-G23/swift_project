@@ -46,7 +46,7 @@ class OpenAIService {
             "messages": [
                 [
                     "role": "system",
-                    "content": "You are an AI assistant that evaluates whether a submitted image correctly reflects a given challenge. Provide a short response: 'Yes' if it matches, 'No' if it does not, and a brief explanation if No."
+                    "content": "You are an AI assistant that evaluates if an image reflects a challenge. Reply ONLY with 'Yes' if it does, or 'No: [short explanation]' if not. Do not add any extra commentary or greetings."
                 ],
                 [
                     "role": "user",
@@ -102,32 +102,41 @@ class OpenAIService {
     }
     
 }
-
 class CameraLogic: ObservableObject {
     @Published var capturedImage: UIImage?
     @Published var analysisResult: String?
     @Published var isAnalyzing: Bool = false
     @Published var errorMessage: String?
-
+    
     private let openAIService = OpenAIService()
-
-    func analyzeImage(challengeDescription: String) {
+    
+    func analyzeImage(
+        challengeDescription: String,
+        onPositiveMatch: @escaping () -> Void,
+        onNegativeMatch: @escaping (String) -> Void
+    ) {
         guard let image = capturedImage else {
             errorMessage = "No image captured"
             return
         }
-
+        
         isAnalyzing = true
         errorMessage = nil
-
+        
         openAIService.analyzeImage(image, challengeDescription: challengeDescription) { [weak self] result in
             DispatchQueue.main.async {
                 self?.isAnalyzing = false
-
+                
                 switch result {
                 case .success(let response):
-                    // Directly use the response string (No need to join keywords)
                     self?.analysisResult = "Response: \(response)"
+                    
+                    if response.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("yes") {
+                        onPositiveMatch()
+                    } else {
+                        onNegativeMatch(response)
+                    }
+                    
                 case .failure(let error):
                     self?.errorMessage = error.localizedDescription
                     print("Image Analysis Error: \(error)")
@@ -136,5 +145,4 @@ class CameraLogic: ObservableObject {
         }
     }
 }
-
 
