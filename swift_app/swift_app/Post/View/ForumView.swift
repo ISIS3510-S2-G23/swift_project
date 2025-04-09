@@ -9,7 +9,7 @@ import SwiftUI
 struct ForumView: View {
     @StateObject private var viewModel = ForumViewModel()
     @State private var searchText = ""
-    @Binding var selectedView: Int  // To allow navigation to other tabs
+    @Binding var selectedView: Int  
     
     private let topics = ["Recycling", "Upcycling", "Transport"]
     
@@ -60,20 +60,20 @@ struct ForumView: View {
             
             // Posts list
             ScrollView {
-                LazyVStack(spacing: 16) {
-                    ForEach(filteredPosts) { post in
-                        PostCardView(
-                            post: post,
-                            upvoteAction: { viewModel.upvotePost(post) }
-                        )
-                        .onTapGesture {
-                            // Here we could implement navigation to detail view in the future
+                        LazyVStack(spacing: 16) {
+                            ForEach(filteredPosts) { post in
+                                NavigationLink(destination: PostDetailView(post: post)) {
+                                    PostCardView(
+                                        post: post,
+                                        upvoteAction: { viewModel.upvotePost(post) }
+                                    )
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
                         }
+                        .padding(.horizontal)
+                        .padding(.bottom, 16)
                     }
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 16)
-            }
         }
     }
     
