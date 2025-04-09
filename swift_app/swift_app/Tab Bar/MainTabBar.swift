@@ -16,7 +16,7 @@ struct MainTabView: View {
             ZStack {
                 switch selectedView {
                 case 0:
-                    HomeView(selectedView: $selectedView)
+                    ForumView(selectedView: $selectedView)
                 case 1:
                     PointsView(selectedView: $selectedView)
                 case 2:
