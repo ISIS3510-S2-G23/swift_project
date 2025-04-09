@@ -8,14 +8,23 @@ import FirebaseAuth
 import Combine
 
 class AuthenticationService: ObservableObject {
-    @Published var currentUser: User?
+    @Published var currentFirebaseUser: FirebaseAuth.User?
+    @Published var currentUser: AppUser?
     @Published var isAuthenticating = false
     @Published var error: String?
     private var authStateDidChangeListenerHandle: AuthStateDidChangeListenerHandle?
 
     private func setupAuthStateListener() {
-        authStateDidChangeListenerHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
-            self?.currentUser = user
+        authStateDidChangeListenerHandle = Auth.auth().addStateDidChangeListener { [weak self] _, firebaseUser in
+            self?.currentFirebaseUser = firebaseUser
+            
+            if let firebaseUser = firebaseUser {
+                // Convert to your app's user model
+                self?.currentUser = AppUser(from: firebaseUser)
+                
+            } else {
+                self?.currentUser = nil
+            }
         }
     }
     
