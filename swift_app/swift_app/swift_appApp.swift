@@ -8,6 +8,8 @@
 import SwiftUI
 import FirebaseCore
 import FirebasePerformance
+import FirebaseCrashlytics
+
 
 @main
 struct swift_appApp: App {

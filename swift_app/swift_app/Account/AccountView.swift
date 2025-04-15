@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseCrashlytics
 
 struct AccountView: View {
     @Binding var selectedView: Int
@@ -37,7 +38,8 @@ struct AccountView: View {
                 // Menu Options
                 VStack(spacing: 25) {
                     Button(action: {
-                        // Edit Account action
+                        Crashlytics.crashlytics().log("Edit Account tapped - triggering test crash")
+                        fatalError("Test Crash from Edit Account button")
                     }) {
                         Text("Edit Account")
                             .font(.headline)
@@ -64,7 +66,6 @@ struct AccountView: View {
                     }
                     
                     Button(action: {
-                    
                         showSignUp = true
                     }) {
                         Text("Log out")
@@ -86,6 +87,7 @@ struct AccountView: View {
         }
     }
 }
+
 
 class AppState: ObservableObject {
     @Published var isLoggedIn = true
