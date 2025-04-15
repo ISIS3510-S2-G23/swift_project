@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FirebaseCore
+import FirebasePerformance
 
 @main
 struct swift_appApp: App {

@@ -5,8 +5,10 @@
 //  Created by Paulina Arrazola on 20/03/25.
 //
 import SwiftUI
+import FirebasePerformance
 
 struct WelcomeView1: View {
+    let trace = Performance.startTrace(name: "welcome_view_load")
     @State private var navigateToWelcomeView2 = false
     
     var body: some View {
@@ -56,6 +58,10 @@ struct WelcomeView1: View {
             .navigationDestination(isPresented: $navigateToWelcomeView2) {
                 WelcomeView2()
                     .navigationBarBackButtonHidden(true)
+            }
+            .onAppear {
+                            trace?.stop()
+            
             }
         }
     }
