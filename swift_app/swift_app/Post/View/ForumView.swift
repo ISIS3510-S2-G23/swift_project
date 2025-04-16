@@ -5,11 +5,12 @@
 //  Created by Paulina Arrazola on 9/04/25.
 //
 import SwiftUI
+import FirebaseAnalytics
 
 struct ForumView: View {
     @StateObject private var viewModel = ForumViewModel()
     @State private var searchText = ""
-    @Binding var selectedView: Int  
+    @Binding var selectedView: Int
     
     private let topics = ["Recycling", "Upcycling", "Transport"]
     
@@ -60,20 +61,23 @@ struct ForumView: View {
             
             // Posts list
             ScrollView {
-                        LazyVStack(spacing: 16) {
-                            ForEach(filteredPosts) { post in
-                                NavigationLink(destination: PostDetailView(post: post)) {
-                                    PostCardView(
-                                        post: post,
-                                        upvoteAction: { viewModel.upvotePost(post) }
-                                    )
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                            }
+                LazyVStack(spacing: 16) {
+                    ForEach(filteredPosts) { post in
+                        NavigationLink(destination: PostDetailView(post: post)) {
+                            PostCardView(
+                                post: post,
+                                upvoteAction: { viewModel.upvotePost(post) }
+                            )
                         }
-                        .padding(.horizontal)
-                        .padding(.bottom, 16)
+                        .buttonStyle(PlainButtonStyle())
                     }
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 16)
+            }
+        }
+        .onAppear {
+            logScreen("ForumView")
         }
     }
     
@@ -89,7 +93,16 @@ struct ForumView: View {
             }
         }
     }
+
+  
+    func logScreen(_ name: String) {
+        Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+            AnalyticsParameterScreenName: name,
+            AnalyticsParameterScreenClass: name
+        ])
+    }
 }
+
 
 struct TopicFilterButton: View {
     let topic: String

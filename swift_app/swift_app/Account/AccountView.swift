@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FirebaseCrashlytics
+import FirebaseAnalytics
 
 struct AccountView: View {
     @Binding var selectedView: Int
@@ -80,14 +81,23 @@ struct AccountView: View {
             }
             .padding()
             .background(Color.white)
-            
+            .onAppear {
+                logScreen("AccountView")
+            }
             .fullScreenCover(isPresented: $showSignUp) {
                 OptionsView()
             }
         }
     }
-}
 
+  
+    func logScreen(_ name: String) {
+        Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+            AnalyticsParameterScreenName: name,
+            AnalyticsParameterScreenClass: name
+        ])
+    }
+}
 
 class AppState: ObservableObject {
     @Published var isLoggedIn = true

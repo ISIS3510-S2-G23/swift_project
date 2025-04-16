@@ -6,10 +6,11 @@
 //
 
 import SwiftUI
+import FirebaseAnalytics
 
 struct NearMeView: View {
     var body: some View {
-        VStack(alignment: .leading) { 
+        VStack(alignment: .leading) {
             Text("Recycle points near you")
                 .font(.headline)
 
@@ -24,10 +25,20 @@ struct NearMeView: View {
                 .fill(Color.white)
                 .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 5)
         )
+        .onAppear { 
+            logScreen("NearMeView")
+        }
+    }
+
+
+    func logScreen(_ name: String) {
+        Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+            AnalyticsParameterScreenName: name,
+            AnalyticsParameterScreenClass: name
+        ])
     }
 }
 
 #Preview {
     NearMeView()
 }
-

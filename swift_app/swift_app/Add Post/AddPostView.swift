@@ -4,9 +4,11 @@
 //
 //  Created by Juan Sebastian Pardo on 3/17/25.
 //
+
 import SwiftUI
 import Firebase
 import UIKit
+import FirebaseAnalytics 
 
 struct AddPostView: View {
     @Binding var selectedView: Int
@@ -77,7 +79,6 @@ struct AddPostView: View {
                         }
                     }
 
-                    // Selected Tags
                     if !viewModel.selectedCategories.isEmpty {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack {
@@ -96,7 +97,6 @@ struct AddPostView: View {
                         }
                     }
 
-                    // Post button image
                     Button(action: {
                         viewModel.submitPost()
                     }) {
@@ -111,6 +111,9 @@ struct AddPostView: View {
                 .background(Color("CardBackground"))
                 .padding(.horizontal)
             }
+        }
+        .onAppear {
+            logScreen("AddPostView")
         }
         .fullScreenCover(isPresented: $showImagePicker) {
             ImagePicker(isPresented: $showImagePicker, selectedImage: $viewModel.selectedImage)
@@ -154,6 +157,13 @@ struct AddPostView: View {
                 }
             )
         }
+    }
+
+    func logScreen(_ name: String) {
+        Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+            AnalyticsParameterScreenName: name,
+            AnalyticsParameterScreenClass: name
+        ])
     }
 }
 
