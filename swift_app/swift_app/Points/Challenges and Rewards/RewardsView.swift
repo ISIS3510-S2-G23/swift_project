@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseAnalytics
 
 struct RewardsView: View {
     @StateObject private var viewModel = ChallengesViewModel()
@@ -33,6 +34,17 @@ struct RewardsView: View {
                 )
             }
         }
+        .onAppear { 
+            logScreen("RewardsView")
+        }
+    }
+
+
+    func logScreen(_ name: String) {
+        Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+            AnalyticsParameterScreenName: name,
+            AnalyticsParameterScreenClass: name
+        ])
     }
 }
 

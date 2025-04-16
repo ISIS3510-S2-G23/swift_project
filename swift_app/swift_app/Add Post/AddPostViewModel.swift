@@ -4,16 +4,17 @@
 //
 //  Created by Paulina Arrazola on 13/04/25.
 //
+
 import Foundation
 import Firebase
 import FirebaseFirestore
 import UIKit
 import SwiftUI
 import FirebaseAuth
+import FirebaseAnalytics
 
 class AddPostViewModel: ObservableObject {
     @Published var postContent: String = ""
-    @Published var category: String = ""
     @Published var selectedImage: UIImage?
     @Published var isLoading: Bool = false
     @Published var showAlert: Bool = false
@@ -39,7 +40,6 @@ class AddPostViewModel: ObservableObject {
 
         isLoading = true
 
-        // Get current user ID from Firebase Auth
         guard let userId = Auth.auth().currentUser?.uid else {
             alertMessage = "Please log in to post."
             showAlert = true
@@ -98,8 +98,8 @@ class AddPostViewModel: ObservableObject {
             "upvotes": 0
         ]
 
-        if !category.isEmpty {
-            postData["tags"] = [category.lowercased()]
+        if !selectedCategories.isEmpty {
+            postData["tags"] = selectedCategories.map { $0.lowercased() }
         }
 
         if let assetUrl = assetUrl {
@@ -118,10 +118,15 @@ class AddPostViewModel: ObservableObject {
                 self.showAlert = true
                 self.isPostSuccessful = true
 
+               
+                Analytics.logEvent("post_created", parameters: [
+                    "has_tags": !self.selectedCategories.isEmpty
+                ])
+
                 // Reset form
                 self.postContent = ""
                 self.selectedImage = nil
-                self.category = ""
+                self.selectedCategories = []
             }
         }
     }

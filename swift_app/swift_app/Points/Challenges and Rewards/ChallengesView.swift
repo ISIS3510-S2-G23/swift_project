@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseAnalytics
 
 struct ChallengesView: View {
     @StateObject private var viewModel = ChallengesViewModel()
@@ -43,8 +44,19 @@ struct ChallengesView: View {
                 )
             }
         }
+        .onAppear {
+            logScreen("ChallengesView")
+        }
+    }
+
+    func logScreen(_ name: String) {
+        Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+            AnalyticsParameterScreenName: name,
+            AnalyticsParameterScreenClass: name
+        ])
     }
 }
+
 
 #Preview {
     ChallengesView(selectedTab: .constant("Challenges"))
