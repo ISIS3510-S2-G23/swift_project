@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MainTabView: View {
-    @State private var selectedView: Int = 1  // Default tab (Points)
+    @State private var selectedView: Int = 0  // Default tab (Forum view)
 
     var body: some View {
         VStack(spacing: 0) {

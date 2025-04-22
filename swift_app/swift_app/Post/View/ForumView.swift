@@ -1,9 +1,3 @@
-//
-//  ForumView.swift.swift
-//  swift_app
-//
-//  Created by Paulina Arrazola on 9/04/25.
-//
 import SwiftUI
 import FirebaseAnalytics
 
@@ -14,6 +8,9 @@ struct ForumView: View {
     
     private let topics = ["Recycling", "Upcycling", "Transport"]
     
+    // Add a reference to the MapViewModel
+    @StateObject private var mapViewModel = MapViewModel()
+
     var body: some View {
         VStack(spacing: 0) {
             // Search bar
@@ -78,6 +75,12 @@ struct ForumView: View {
         }
         .onAppear {
             logScreen("ForumView")
+            
+            // Trigger the asynchronous loading of locations from MapViewModel
+            Task {
+                print("SENT ASYNC LOCATION FETCHING")
+                await mapViewModel.fetchLocations() // Fetch locations for the map
+            }
         }
     }
     
@@ -102,7 +105,6 @@ struct ForumView: View {
         ])
     }
 }
-
 
 struct TopicFilterButton: View {
     let topic: String
