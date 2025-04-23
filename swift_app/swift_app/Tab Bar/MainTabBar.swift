@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct MainTabView: View {
-    @State private var selectedView: Int = 1  // Default tab (Points)
-
+    @State private var selectedView: Int = 0  // Default tab (Forum view)
+    @StateObject private var mapViewModel = MapViewModel()
+    
     var body: some View {
         VStack(spacing: 0) {
             // Display the selected view
@@ -35,6 +36,13 @@ struct MainTabView: View {
             TabBarView(selectedView: $selectedView)
         }
         .edgesIgnoringSafeArea(.bottom)
+        .onAppear {
+            //Create the async task of fetching map locations
+            Task {
+                print("SENT ASYNC LOCATION FETCHING")
+                await mapViewModel.fetchLocations()
+            }
+        }
     }
 }
 

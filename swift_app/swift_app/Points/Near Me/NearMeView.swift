@@ -9,12 +9,13 @@ import SwiftUI
 import FirebaseAnalytics
 
 struct NearMeView: View {
+    @StateObject private var mapViewModel = MapViewModel()
     var body: some View {
         VStack(alignment: .leading) {
             Text("Recycle points near you")
                 .font(.headline)
 
-            MapViewModelWrapper()
+            MapViewModelWrapper(mapViewModel: mapViewModel)
                 .frame(width: 320, height: 400)
                 .cornerRadius(12)
         }
