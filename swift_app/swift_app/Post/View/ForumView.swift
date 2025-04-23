@@ -1,3 +1,9 @@
+//
+//  ForumView.swift.swift
+//  swift_app
+//
+//  Created by Paulina Arrazola on 9/04/25.
+//
 import SwiftUI
 import FirebaseAnalytics
 
@@ -8,8 +14,6 @@ struct ForumView: View {
     
     private let topics = ["Recycling", "Upcycling", "Transport"]
     
-    
-
     var body: some View {
         VStack(spacing: 0) {
             // Search bar
@@ -74,7 +78,6 @@ struct ForumView: View {
         }
         .onAppear {
             logScreen("ForumView")
-            
         }
     }
     
@@ -99,6 +102,7 @@ struct ForumView: View {
         ])
     }
 }
+
 
 struct TopicFilterButton: View {
     let topic: String
