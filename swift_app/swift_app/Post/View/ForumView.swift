@@ -8,8 +8,7 @@ struct ForumView: View {
     
     private let topics = ["Recycling", "Upcycling", "Transport"]
     
-    // Add a reference to the MapViewModel
-    @StateObject private var mapViewModel = MapViewModel()
+    
 
     var body: some View {
         VStack(spacing: 0) {
@@ -76,11 +75,6 @@ struct ForumView: View {
         .onAppear {
             logScreen("ForumView")
             
-            // Trigger the asynchronous loading of locations from MapViewModel
-            Task {
-                print("SENT ASYNC LOCATION FETCHING")
-                await mapViewModel.fetchLocations() // Fetch locations for the map
-            }
         }
     }
     
