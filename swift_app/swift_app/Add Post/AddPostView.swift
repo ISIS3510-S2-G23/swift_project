@@ -8,13 +8,14 @@
 import SwiftUI
 import Firebase
 import UIKit
-import FirebaseAnalytics 
+import FirebaseAnalytics
 
 struct AddPostView: View {
     @Binding var selectedView: Int
     @StateObject private var viewModel = AddPostViewModel()
     @State private var showImagePicker = false
     @State private var showCategoryPicker = false
+    @State private var connectionStatus = NetworkMonitor.shared.status
 
     private let categories = ["Upcycle", "Transport", "Recycling", "Sustainability"]
 
@@ -27,6 +28,52 @@ struct AddPostView: View {
                 }
 
             VStack {
+                // Connection status indicator
+                if connectionStatus == .disconnected {
+                    HStack {
+                        Image(systemName: "wifi.slash")
+                            .foregroundColor(.orange)
+                        Text("Offline Mode - Posts will be saved for later")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 16)
+                    .background(Color.orange.opacity(0.1))
+                    .cornerRadius(8)
+                }
+                
+                // Pending posts sync indicator
+                if viewModel.isPendingSync {
+                    HStack {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundColor(.blue)
+                        Text("You have pending posts that will sync when online")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                        
+                        Spacer()
+                        
+                        if connectionStatus == .connected {
+                            Button(action: {
+                                PostSyncManager.shared.syncPendingPosts()
+                            }) {
+                                Text("Sync Now")
+                                    .font(.caption)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.blue)
+                                    .cornerRadius(8)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 16)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(8)
+                }
+
                 Spacer()
 
                 VStack(alignment: .leading, spacing: 16) {
@@ -111,9 +158,31 @@ struct AddPostView: View {
                 .background(Color("CardBackground"))
                 .padding(.horizontal)
             }
+            .padding(.vertical)
+            
+            if viewModel.isLoading {
+                Color.black.opacity(0.3)
+                    .edgesIgnoringSafeArea(.all)
+                
+                VStack {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(1.5)
+                    
+                    Text("Processing your post...")
+                        .foregroundColor(.white)
+                        .padding(.top)
+                }
+            }
         }
         .onAppear {
             logScreen("AddPostView")
+            connectionStatus = NetworkMonitor.shared.status
+            // Check for any pending posts
+            viewModel.checkPendingPosts()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .networkStatusChanged)) { _ in
+            connectionStatus = NetworkMonitor.shared.status
         }
         .fullScreenCover(isPresented: $showImagePicker) {
             ImagePicker(isPresented: $showImagePicker, selectedImage: $viewModel.selectedImage)
@@ -148,11 +217,11 @@ struct AddPostView: View {
         }
         .alert(isPresented: $viewModel.showAlert) {
             Alert(
-                title: Text("Forum Post"),
+                title: Text(viewModel.alertTitle),
                 message: Text(viewModel.alertMessage),
                 dismissButton: .default(Text("OK")) {
                     if viewModel.isPostSuccessful {
-                        // You could dismiss the view here if needed
+                
                     }
                 }
             )
