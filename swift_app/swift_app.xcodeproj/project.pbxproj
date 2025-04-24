@@ -48,11 +48,37 @@
 		093805FB2D43ED50008D011B /* swift_app.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = swift_app.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0938060B2D43ED51008D011B /* swift_appTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = swift_appTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		093806152D43ED51008D011B /* swift_appUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = swift_appUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		24F2C7612DB9F1BB00BD607A /* PostEntity+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "PostEntity+CoreDataClass.swift"; path = "swift_app/PostEntity+CoreDataClass.swift"; sourceTree = "<group>"; };
+		24F2C7622DB9F1BB00BD607A /* PostEntity+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "PostEntity+CoreDataProperties.swift"; path = "swift_app/PostEntity+CoreDataProperties.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		24F2C7462DB9DFB600BD607A /* Exceptions for "swift_app" folder in "swift_app" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				DataModel.xcdatamodeld,
+			);
+			target = 093805FA2D43ED50008D011B /* swift_app */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		24F2C7482DB9DFC000BD607A /* Exceptions for "swift_app" folder in "Copy Bundle Resources" phase from "swift_app" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 093805F92D43ED50008D011B /* Resources */;
+			membershipExceptions = (
+				DataModel.xcdatamodeld,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		093805FD2D43ED50008D011B /* swift_app */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				24F2C7462DB9DFB600BD607A /* Exceptions for "swift_app" folder in "swift_app" target */,
+				24F2C7482DB9DFC000BD607A /* Exceptions for "swift_app" folder in "Copy Bundle Resources" phase from "swift_app" target */,
+			);
 			path = swift_app;
 			sourceTree = "<group>";
 		};
@@ -114,6 +140,8 @@
 		093805F22D43ED50008D011B = {
 			isa = PBXGroup;
 			children = (
+				24F2C7612DB9F1BB00BD607A /* PostEntity+CoreDataClass.swift */,
+				24F2C7622DB9F1BB00BD607A /* PostEntity+CoreDataProperties.swift */,
 				093805FD2D43ED50008D011B /* swift_app */,
 				0938060E2D43ED51008D011B /* swift_appTests */,
 				093806182D43ED51008D011B /* swift_appUITests */,

@@ -8,6 +8,7 @@ import Foundation
 import Firebase
 import Combine
 import FirebaseAuth
+import CoreData
 
 class ForumViewModel: ObservableObject {
     @Published var posts: [Post] = []
@@ -17,6 +18,7 @@ class ForumViewModel: ObservableObject {
     private var db = Firestore.firestore()
     private var listenerRegistration: ListenerRegistration?
     
+    private let coreDataStack = CoreDataStack.shared
     init() {
         fetchPosts()
     }
@@ -72,6 +74,9 @@ class ForumViewModel: ObservableObject {
                 }
                 
                 self.applyFilter()
+                
+                print("Begin caching")
+                self.savePosts()
             }
     }
     
@@ -114,7 +119,32 @@ class ForumViewModel: ObservableObject {
                 "upvotes": post.upvotes + 1
             ])
         }
+    
+        
     }
+    
+    func savePosts() {
+            // Only save if we have posts
+            guard !posts.isEmpty else { return }
+            
+            // First clear existing loaded posts
+            print("Tried clearing posts")
+            coreDataStack.clearAllPosts()
+            
+            // Save the first 10 posts (or fewer if there aren't 10)
+            let postsToSave = Array(posts.prefix(10))
+            
+            print("Tied saving posts")
+            for post in postsToSave {
+                _ = coreDataStack.createPostEntity(from: post)
+            }
+            
+            // Save the changes
+            print("tried saving context")
+            coreDataStack.saveContext()
+            print("Saved \(postsToSave.count) posts")
+        }
+
     
     deinit {
         listenerRegistration?.remove()
