@@ -20,8 +20,37 @@ class ForumViewModel: ObservableObject {
     
     private let coreDataStack = CoreDataStack.shared
     init() {
-        fetchPosts()
+        //Register to network status
+        print("STARTED EC")
+        manageEC()
     }
+    
+    func manageEC() {
+        //First we check for connectivity
+        let connectivityStatus = NetworkMonitor.shared.isConnected
+        
+        print("CONNECTION \(connectivityStatus)")
+        //If there is connectivity, fetch posts as normal
+        if connectivityStatus {
+            fetchPosts()
+        }
+        else //If not, load the saved posts
+        {
+            print("LOADING POSTS")
+            loadPosts()
+        }
+    }
+    
+    func loadPosts() {
+        let savedPosts = coreDataStack.getAllSavedPosts()
+        
+        if !savedPosts.isEmpty {
+            self.posts = savedPosts
+            self.applyFilter()
+            print("Loaded \(savedPosts.count) from memory")
+        }
+    }
+    
     
     func fetchPosts() {
         // Remove any existing listener
