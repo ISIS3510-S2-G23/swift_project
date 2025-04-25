@@ -10,8 +10,25 @@ import FirebaseAnalytics
 
 struct NearMeView: View {
     @StateObject private var mapViewModel = MapViewModel()
+        
     var body: some View {
+        // Network status indicator
+        if !mapViewModel.isConnected {
+            HStack {
+                Image(systemName: "wifi.slash")
+                    .foregroundColor(.orange)
+                Text("Offline Mode - Not all locations are available")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+            }
+            .padding(8)
+            .background(Color.orange.opacity(0.2))
+            .cornerRadius(8)
+            .padding(.horizontal)
+        }
         VStack(alignment: .leading) {
+
+            
             Text("Recycle points near you")
                 .font(.headline)
 
