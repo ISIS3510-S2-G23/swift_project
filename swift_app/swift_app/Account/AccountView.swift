@@ -13,7 +13,7 @@ struct AccountView: View {
     @Binding var selectedView: Int
     @State private var showSignUp = false
     @EnvironmentObject var appState: AppState // For managing app-wide state
-    
+
     var body: some View {
         ZStack {
             VStack(alignment: .leading, spacing: 20) {
@@ -39,8 +39,7 @@ struct AccountView: View {
                 // Menu Options
                 VStack(spacing: 25) {
                     Button(action: {
-                        Crashlytics.crashlytics().log("Edit Account tapped - triggering test crash")
-                        fatalError("Test Crash from Edit Account button")
+                        // Edit Account action
                     }) {
                         Text("Edit Account")
                             .font(.headline)
@@ -90,7 +89,6 @@ struct AccountView: View {
         }
     }
 
-  
     func logScreen(_ name: String) {
         Analytics.logEvent(AnalyticsEventScreenView, parameters: [
             AnalyticsParameterScreenName: name,
