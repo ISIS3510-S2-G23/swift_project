@@ -8,6 +8,7 @@ import UIKit
 import MapKit
 import FirebaseFirestore
 import CoreLocation
+import Network
 
 @MainActor
 class MapViewModel: UIViewController, @preconcurrency CLLocationManagerDelegate, ObservableObject {
@@ -17,6 +18,9 @@ class MapViewModel: UIViewController, @preconcurrency CLLocationManagerDelegate,
     
     @Published var locations: [MKPointAnnotation] = []
     @Published var locationsLoaded: Bool = false
+    
+    private let networkMonitor = NWPathMonitor()
+    @Published private(set) var isConnected = true
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -43,6 +47,8 @@ class MapViewModel: UIViewController, @preconcurrency CLLocationManagerDelegate,
             centerMapOnLocation(userLocation)
         }
         
+        setupNetworkMonitoring()
+        
         // Fetch locations asynchronously if not already loaded
         if !locationsLoaded {
             Task {
@@ -52,6 +58,27 @@ class MapViewModel: UIViewController, @preconcurrency CLLocationManagerDelegate,
         else {
             paintLocations()
         }
+    }
+    
+    deinit {
+        networkMonitor.cancel()
+    }
+    
+    private func setupNetworkMonitoring() {
+        networkMonitor.pathUpdateHandler = { [weak self] path in
+            DispatchQueue.main.async {
+                let wasConnected = self?.isConnected ?? true
+                self?.isConnected = (path.status == .satisfied)
+                if !wasConnected && self?.isConnected == true {
+                    print("Network reconnected, refreshing data...")
+                    Task { [weak self] in
+                                        guard let self else { return }
+                                        await self.fetchLocations()
+                                    }
+                }
+            }
+        }
+        networkMonitor.start(queue: DispatchQueue(label: "NetworkMonitor"))
     }
     
     func paintLocations() {

@@ -22,6 +22,7 @@ struct SignUpView: View {
     @State private var alertMessage = ""
     @State private var isLoading = false
     @Environment(\.presentationMode) var presentationMode
+    @StateObject private var authService = AuthenticationService()
     
     var body: some View {
         ZStack {
@@ -59,6 +60,21 @@ struct SignUpView: View {
                         .padding(.bottom, 20)
                 }
                 .padding(.horizontal, 20)
+                
+                // Network status indicator
+                if !authService.isConnected {
+                    HStack {
+                        Image(systemName: "wifi.slash")
+                            .foregroundColor(.orange)
+                        Text("Offline Mode - Sign Up will not be available without network connectivity")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
+                    .padding(8)
+                    .background(Color.orange.opacity(0.2))
+                    .cornerRadius(8)
+                    .padding(.horizontal)
+                }
                 
                 // Form fields in white area
                 ScrollView {
