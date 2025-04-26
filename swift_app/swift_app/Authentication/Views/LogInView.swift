@@ -56,6 +56,21 @@ struct LoginView: View {
                     }
                     .padding(.horizontal, 20)
                     
+                    // Network status indicator
+                    if !authService.isConnected {
+                        HStack {
+                            Image(systemName: "wifi.slash")
+                                .foregroundColor(.orange)
+                            Text("Offline Mode - Log In will not be available without network connectivity")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                        }
+                        .padding(8)
+                        .background(Color.orange.opacity(0.2))
+                        .cornerRadius(8)
+                        .padding(.horizontal)
+                    }
+                    
                     // Form fields in white area
                     VStack(spacing: 20) {
                         VStack(alignment: .leading, spacing: 5) {

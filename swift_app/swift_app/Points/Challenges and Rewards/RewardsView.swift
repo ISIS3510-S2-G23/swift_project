@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseAnalytics
 
 struct RewardsView: View {
     @StateObject private var viewModel = ChallengesViewModel()
@@ -16,9 +17,43 @@ struct RewardsView: View {
     var body: some View {
         ZStack{
             VStack{
-                ForEach(viewModel.challenges){
-                    challenge in RewardCardView(challenge: challenge, selectedChallenge: $selectedChallenge)
+                
+                // Network status indicator
+                if !viewModel.isConnected {
+                    HStack {
+                        Image(systemName: "wifi.slash")
+                            .foregroundColor(.orange)
+                        Text("Offline Mode - Showing rewards for challenges that are not completed yet")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
+                    .padding(8)
+                    .background(Color.orange.opacity(0.2))
+                    .cornerRadius(8)
+                    .padding(.horizontal)
                 }
+                
+                if viewModel.challenges.isEmpty {
+                    VStack(spacing: 20) {
+                        Image(systemName: "tray")
+                            .font(.system(size: 50))
+                            .foregroundColor(.gray)
+                        Text("No rewards available")
+                            .font(.headline)
+                        if !viewModel.isConnected {
+                            Text("Connect to the internet to see all rewards")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    .padding()
+                    .frame(maxHeight: .infinity)
+                } else {
+                    ForEach(viewModel.challenges){
+                        challenge in RewardCardView(challenge: challenge, selectedChallenge: $selectedChallenge)
+                    }
+                }
+                
             }
             .padding(.top, 10)
             
@@ -33,6 +68,17 @@ struct RewardsView: View {
                 )
             }
         }
+        .onAppear { 
+            logScreen("RewardsView")
+        }
+    }
+
+
+    func logScreen(_ name: String) {
+        Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+            AnalyticsParameterScreenName: name,
+            AnalyticsParameterScreenClass: name
+        ])
     }
 }
 

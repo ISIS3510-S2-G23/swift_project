@@ -4,16 +4,23 @@
 //
 //  Created by Juan Sebastian Pardo on 3/15/25.
 //
-
 import UIKit
 import MapKit
 import FirebaseFirestore
 import CoreLocation
+import Network
 
-class MapViewModel: UIViewController, CLLocationManagerDelegate {
+@MainActor
+class MapViewModel: UIViewController, @preconcurrency CLLocationManagerDelegate, ObservableObject {
     
     let mapView = MKMapView()
     let locationManager = CLLocationManager()
+    
+    @Published var locations: [MKPointAnnotation] = []
+    @Published var locationsLoaded: Bool = false
+    
+    private let networkMonitor = NWPathMonitor()
+    @Published private(set) var isConnected = true
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,7 +35,7 @@ class MapViewModel: UIViewController, CLLocationManagerDelegate {
             mapView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
         
-        // Setup location manager first
+        // Setup location manager
         setupLocationManager()
         
         // Enable user tracking
@@ -40,10 +47,47 @@ class MapViewModel: UIViewController, CLLocationManagerDelegate {
             centerMapOnLocation(userLocation)
         }
         
-        // Fetch and display locations from Firebase
-        fetchLocations()
+        setupNetworkMonitoring()
+        
+        // Fetch locations asynchronously if not already loaded
+        if !locationsLoaded {
+            Task {
+                await fetchLocations()
+            }
+        }
+        else {
+            paintLocations()
+        }
     }
     
+    deinit {
+        networkMonitor.cancel()
+    }
+    
+    private func setupNetworkMonitoring() {
+        networkMonitor.pathUpdateHandler = { [weak self] path in
+            DispatchQueue.main.async {
+                let wasConnected = self?.isConnected ?? true
+                self?.isConnected = (path.status == .satisfied)
+                if !wasConnected && self?.isConnected == true {
+                    print("Network reconnected, refreshing data...")
+                    Task { [weak self] in
+                                        guard let self else { return }
+                                        await self.fetchLocations()
+                                    }
+                }
+            }
+        }
+        networkMonitor.start(queue: DispatchQueue(label: "NetworkMonitor"))
+    }
+    
+    func paintLocations() {
+        for annotation in locations {
+            DispatchQueue.main.async {
+                self.mapView.addAnnotation(annotation)
+            }
+        }
+    }
     func setupLocationManager() {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
@@ -86,25 +130,23 @@ class MapViewModel: UIViewController, CLLocationManagerDelegate {
         centerMapOnLocation(userLocation)
     }
     
-    func fetchLocations() {
+    // Async function to fetch locations from Firestore
+    func fetchLocations() async {
+        
+        print("STARTED FETCHING LOCATIONS")
         let db = Firestore.firestore()
         
-        db.collection("locations").getDocuments { snapshot, error in
-            if let error = error {
-                print("Error fetching locations: \(error)")
-                return
-            }
-            
-            guard let documents = snapshot?.documents else {
+        do {
+            let snapshot = try await db.collection("locations").getDocuments()
+            if snapshot.isEmpty {
                 print("No locations found")
                 return
             }
             
-            DispatchQueue.main.async {
-                self.mapView.removeAnnotations(self.mapView.annotations)
-            }
+            // Clear the previous annotations
+            self.mapView.removeAnnotations(self.mapView.annotations)
             
-            for document in documents {
+            for document in snapshot.documents {
                 let data = document.data()
                 
                 if let name = data["name"] as? String,
@@ -118,27 +160,41 @@ class MapViewModel: UIViewController, CLLocationManagerDelegate {
                     annotation.title = name
                     annotation.subtitle = "Recycle Point"
                     
-                    print("Added Location: \(name) at (\(latitude), \(longitude))")
-                    
+                    // Add annotation to mapView
                     DispatchQueue.main.async {
                         self.mapView.addAnnotation(annotation)
+                        self.locations.append(annotation)
+                        print("FETCHED \(annotation)")
                     }
                 }
             }
+            
+            // Set locations loaded flag to true
+            DispatchQueue.main.async {
+                self.locationsLoaded = true
+                print("FINISHED FETCHING LOCATIONS")
+            }
+        } catch {
+            print("Error fetching locations: \(error)")
         }
     }
 }
+
+
 
 
 // MARK: - SwiftUI Wrapper for MapViewController
 import SwiftUI
 
 struct MapViewModelWrapper: UIViewControllerRepresentable {
+    @ObservedObject var mapViewModel = MapViewModel()  // Use StateObject here
+    
     func makeUIViewController(context: Context) -> MapViewModel {
-        return MapViewModel()
+        return mapViewModel  // Return the same mapViewModel object
     }
 
     func updateUIViewController(_ uiViewController: MapViewModel, context: Context) {
-        // No update needed for a static map
+        // No update needed for static map, it's managed within MapViewModel
     }
 }
+

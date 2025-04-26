@@ -6,29 +6,58 @@
 //
 import FirebaseAuth
 import Combine
+import Network
 
 class AuthenticationService: ObservableObject {
-    @Published var currentUser: User?
+    @Published var currentFirebaseUser: FirebaseAuth.User?
+    @Published var currentUser: AppUser?
     @Published var isAuthenticating = false
     @Published var error: String?
     private var authStateDidChangeListenerHandle: AuthStateDidChangeListenerHandle?
 
+    private let networkMonitor = NWPathMonitor()
+    @Published private(set) var isConnected = true
+    
     private func setupAuthStateListener() {
-        authStateDidChangeListenerHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
-            self?.currentUser = user
+        authStateDidChangeListenerHandle = Auth.auth().addStateDidChangeListener { [weak self] _, firebaseUser in
+            self?.currentFirebaseUser = firebaseUser
+            
+            if let firebaseUser = firebaseUser {
+                // Convert to your app's user model
+                self?.currentUser = AppUser(from: firebaseUser)
+                
+            } else {
+                self?.currentUser = nil
+            }
         }
     }
     
     init() {
         setupAuthStateListener()
+        setupNetworkMonitoring()
     }
     deinit {
         if let handle = authStateDidChangeListenerHandle {
             Auth.auth().removeStateDidChangeListener(handle)
         }
+        
+        networkMonitor.cancel()
     }
     
 
+    private func setupNetworkMonitoring() {
+        networkMonitor.pathUpdateHandler = { [weak self] path in
+            DispatchQueue.main.async {
+                let wasConnected = self?.isConnected ?? true
+                self?.isConnected = (path.status == .satisfied)
+                if !wasConnected && self?.isConnected == true {
+                    print("Network reconnected")
+                }
+            }
+        }
+        networkMonitor.start(queue: DispatchQueue(label: "NetworkMonitor"))
+    }
+    
     func signIn(email: String, password: String, completion: @escaping (Bool) -> Void) {
         isAuthenticating = true
         error = nil
