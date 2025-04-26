@@ -8,6 +8,7 @@ import Foundation
 import Firebase
 import Combine
 import FirebaseAuth
+import Network
 
 class ForumViewModel: ObservableObject {
     @Published var posts: [Post] = []
@@ -17,8 +18,33 @@ class ForumViewModel: ObservableObject {
     private var db = Firestore.firestore()
     private var listenerRegistration: ListenerRegistration?
     
+    private let networkMonitor = NWPathMonitor()
+    @Published private(set) var isConnected = true
+    
     init() {
+        setupNetworkMonitoring()
+        
+        print("ESTADO CONEXION: \(isConnected)")
+        
         fetchPosts()
+    }
+    
+    
+    
+    
+    
+    private func setupNetworkMonitoring() {
+        networkMonitor.pathUpdateHandler = { [weak self] path in
+            DispatchQueue.main.async {
+                let wasConnected = self?.isConnected ?? true
+                self?.isConnected = (path.status == .satisfied)
+                if !wasConnected && self?.isConnected == true {
+                    print("Network reconnected, refreshing data...")
+                    self?.fetchPosts()
+                }
+            }
+        }
+        networkMonitor.start(queue: DispatchQueue(label: "NetworkMonitor"))
     }
     
     func fetchPosts() {
@@ -117,6 +143,7 @@ class ForumViewModel: ObservableObject {
     }
     
     deinit {
+        networkMonitor.cancel()
         listenerRegistration?.remove()
     }
 }

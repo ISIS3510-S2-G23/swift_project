@@ -59,22 +59,55 @@ struct ForumView: View {
             }
             .padding(.vertical, 10)
             
-            // Posts list
-            ScrollView {
-                LazyVStack(spacing: 16) {
-                    ForEach(filteredPosts) { post in
-                        NavigationLink(destination: PostDetailView(post: post)) {
-                            PostCardView(
-                                post: post,
-                                upvoteAction: { viewModel.upvotePost(post) }
-                            )
-                        }
-                        .buttonStyle(PlainButtonStyle())
+            
+            if !viewModel.isConnected {
+                HStack {
+                    Image(systemName: "wifi.slash")
+                        .foregroundColor(.orange)
+                    Text("Offline Mode - Some posts may not be available")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                }
+                .padding(8)
+                .background(Color.orange.opacity(0.2))
+                .cornerRadius(8)
+                .padding(.horizontal)
+            }
+            
+            if viewModel.filteredPosts.isEmpty {
+                VStack(spacing: 20) {
+                    Image(systemName: "tray")
+                        .font(.system(size: 50))
+                        .foregroundColor(.gray)
+                    Text("No posts available")
+                        .font(.headline)
+                    if !viewModel.isConnected {
+                        Text("Connect to the internet to see all posts")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
                     }
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 16)
+                .padding()
+                .frame(maxHeight: .infinity)
+            } else {
+                // Posts list
+                ScrollView {
+                    LazyVStack(spacing: 16) {
+                        ForEach(filteredPosts) { post in
+                            NavigationLink(destination: PostDetailView(post: post)) {
+                                PostCardView(
+                                    post: post,
+                                    upvoteAction: { viewModel.upvotePost(post) }
+                                )
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 16)
+                }
             }
+           
         }
         .onAppear {
             logScreen("ForumView")
