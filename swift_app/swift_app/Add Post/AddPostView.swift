@@ -5,6 +5,7 @@
 //  Created by Juan Sebastian Pardo on 3/17/25.
 //
 
+
 import SwiftUI
 import Firebase
 import UIKit
@@ -15,7 +16,7 @@ struct AddPostView: View {
     @StateObject private var viewModel = AddPostViewModel()
     @State private var showImagePicker = false
     @State private var showCategoryPicker = false
-    @State private var connectionStatus = NetworkMonitor.shared.status
+    @State private var connectionStatus = AddPostNetworkMonitor.shared.status
 
     private let categories = ["Upcycle", "Transport", "Recycling", "Sustainability"]
 
@@ -40,37 +41,6 @@ struct AddPostView: View {
                     .padding(.vertical, 8)
                     .padding(.horizontal, 16)
                     .background(Color.orange.opacity(0.1))
-                    .cornerRadius(8)
-                }
-                
-                // Pending posts sync indicator
-                if viewModel.isPendingSync {
-                    HStack {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(.blue)
-                        Text("You have pending posts that will sync when online")
-                            .font(.caption)
-                            .foregroundColor(.blue)
-                        
-                        Spacer()
-                        
-                        if connectionStatus == .connected {
-                            Button(action: {
-                                PostSyncManager.shared.syncPendingPosts()
-                            }) {
-                                Text("Sync Now")
-                                    .font(.caption)
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.blue)
-                                    .cornerRadius(8)
-                            }
-                        }
-                    }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
-                    .background(Color.blue.opacity(0.1))
                     .cornerRadius(8)
                 }
 
@@ -177,12 +147,12 @@ struct AddPostView: View {
         }
         .onAppear {
             logScreen("AddPostView")
-            connectionStatus = NetworkMonitor.shared.status
+            connectionStatus = AddPostNetworkMonitor.shared.status
             // Check for any pending posts
             viewModel.checkPendingPosts()
         }
         .onReceive(NotificationCenter.default.publisher(for: .networkStatusChanged)) { _ in
-            connectionStatus = NetworkMonitor.shared.status
+            connectionStatus = AddPostNetworkMonitor.shared.status
         }
         .fullScreenCover(isPresented: $showImagePicker) {
             ImagePicker(isPresented: $showImagePicker, selectedImage: $viewModel.selectedImage)

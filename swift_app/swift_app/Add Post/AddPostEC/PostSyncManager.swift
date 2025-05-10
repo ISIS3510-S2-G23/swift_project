@@ -32,13 +32,13 @@ class PostSyncManager {
     }
     
     @objc private func handleNetworkChange() {
-        if NetworkMonitor.shared.isConnected && !isSyncing {
+        if AddPostNetworkMonitor.shared.isConnected && !isSyncing {
             syncPendingPosts()
         }
     }
     
     func syncPendingPosts() {
-        guard NetworkMonitor.shared.isConnected else {
+        guard AddPostNetworkMonitor.shared.isConnected else {
             print("Cannot sync posts: No internet connection")
             return
         }
