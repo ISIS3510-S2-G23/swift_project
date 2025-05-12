@@ -144,7 +144,6 @@ class ChallengesViewModel: ObservableObject {
 
     
     func updateProgressChallenge(pChallenge: Challenge, newProgress: Int) {
-        print("UPDATE PROGRESS CHALLENGE WAS JUST CLICKED")
         guard isConnected else {
             print("Cannot update challenge without internet connection")
             return

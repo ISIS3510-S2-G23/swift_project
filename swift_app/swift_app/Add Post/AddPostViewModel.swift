@@ -4,6 +4,7 @@
 //
 //  Created by Paulina Arrazola on 13/04/25.
 //
+
 import Foundation
 import Firebase
 import FirebaseFirestore
@@ -68,7 +69,7 @@ class AddPostViewModel: ObservableObject {
         }
         
         // Check network connectivity
-        if NetworkMonitor.shared.isConnected {
+        if AddPostNetworkMonitor.shared.isConnected {
             // If online, proceed with normal post flow
             if let image = selectedImage {
                 uploadImageToCloudinary(image) { [weak self] cloudinaryUrl in
@@ -114,7 +115,6 @@ class AddPostViewModel: ObservableObject {
                 "has_image": selectedImage != nil
             ])
             
-            // Reset form
             resetForm()
         } else {
             alertTitle = "Error"
