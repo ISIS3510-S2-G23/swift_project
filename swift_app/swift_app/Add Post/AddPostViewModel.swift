@@ -115,7 +115,6 @@ class AddPostViewModel: ObservableObject {
                 "has_image": selectedImage != nil
             ])
             
-            // Reset form
             resetForm()
         } else {
             alertTitle = "Error"
