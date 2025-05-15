@@ -10,6 +10,7 @@ import SwiftUI
 struct PostDetailView: View {
     let post: Post
     let conectado: Bool
+    let viewModel: ForumViewModel
     @State private var image: UIImage? = nil
     @State private var isLoading = false
     @State private var isCommenting: Bool = false
@@ -142,7 +143,7 @@ struct PostDetailView: View {
             
             if isCommenting {
 
-                CommentPopupView(isPresented: $isCommenting)
+                CommentPopupView(isPresented: $isCommenting, viewModel: viewModel, post: post)
             }
         }
     }
@@ -175,22 +176,4 @@ struct PostDetailView: View {
     }
 }
 
-#Preview {
-    PostDetailView(
-        post: Post(
-            id: UUID().uuidString,
-            asset: "https://res.cloudinary.com/dhrkcqd33/image/upload/v1745441946/image_gawkxi.jpg",
-            comments: ["user1": "Great post!", "user2": "Very inspiring!"],
-            tags: ["Recycling"],
-            text: "Let’s reduce waste and build a more sustainable world with recycling and community action.",
-            timestamp: Date(),
-            title: "A Greener Future",
-            upvotedBy: ["user1", "user2"],
-            upvotes: 42,
-            user: "EcoWarrior123"
-        ),
-        conectado: true
-    )
-    .padding()
-    .background(Color.gray.opacity(0.1))
-}
+

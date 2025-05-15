@@ -3,10 +3,25 @@ import SwiftUI
 struct CommentPopupView: View {
     @Binding var isPresented: Bool
     @State private var commentText: String = ""
-    
+    let viewModel: ForumViewModel
+    let post: Post
 
     var body: some View {
         VStack(spacing: 16) {
+            if !viewModel.isConnected {
+                HStack {
+                    Image(systemName: "wifi.slash")
+                        .foregroundColor(.orange)
+                    Text("Offline Mode - Comments will be posted when connection is restored")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                }
+                .padding(8)
+                .background(Color.orange.opacity(0.2))
+                .cornerRadius(8)
+                .padding(.horizontal)
+            }
+            
             Text("Leave your comment")
                 .font(.headline)
             
@@ -15,7 +30,9 @@ struct CommentPopupView: View {
                 .padding(.horizontal)
 
             Button(action: {
-                
+                print("Adding comment to DB")
+                viewModel.addComment(post: post, comment: commentText)
+                print("Comment added to DB")
                 isPresented = false
             }) {
                 Text("Post comment")
@@ -47,11 +64,4 @@ struct CommentPopupView: View {
     }
 }
 
-#Preview {
-    // Using a constant Binding to simulate a visible popup
-    CommentPopupView(
-        isPresented: .constant(true),
-        
-    )
-    .background(Color.gray.opacity(0.3))
-}
+
