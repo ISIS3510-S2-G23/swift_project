@@ -116,6 +116,26 @@ class ForumViewModel: ObservableObject {
         applyFilter()
     }
     
+    func addComment(post: Post, comment: String) {
+        guard let postId = post.id else { return }
+        
+        print("UPDATING COMMENT - id \(postId)")
+        let userId = Auth.auth().currentUser?.displayName ?? "anonymous"
+        print("UPDATING COMMENT - user \(userId)")
+        // Ensure comments is [String: String]
+        let comments = post.comments ?? [:]
+    
+        // Create a new dictionary by merging
+        let updatedComments = comments.merging([userId: comment]) { (_, new) in new }
+        print("UPDATING COMMENT - comments \(updatedComments)")
+        // Safely pass to Firestore
+        db.collection("posts").document(postId).updateData([
+            "comments": updatedComments
+        ])
+        print("UPDATING COMMENT - UPDATED")
+    }
+
+    
     func upvotePost(_ post: Post) {
         guard let postId = post.id else { return }
         
