@@ -97,7 +97,7 @@ struct ForumView: View {
                             NavigationLink(destination: PostDetailView(post: post)) {
                                 PostCardView(
                                     post: post,
-                                    upvoteAction: { viewModel.upvotePost(post) }
+                                    upvoteAction: { viewModel.upvotePost(post) }, conectado: viewModel.isConnected
                                 )
                             }
                             .buttonStyle(PlainButtonStyle())
