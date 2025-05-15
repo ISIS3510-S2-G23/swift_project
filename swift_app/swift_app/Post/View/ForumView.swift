@@ -94,7 +94,7 @@ struct ForumView: View {
                 ScrollView {
                     LazyVStack(spacing: 16) {
                         ForEach(filteredPosts) { post in
-                            NavigationLink(destination: PostDetailView(post: post)) {
+                            NavigationLink(destination: PostDetailView(post: post, conectado: viewModel.isConnected)) {
                                 PostCardView(
                                     post: post,
                                     upvoteAction: { viewModel.upvotePost(post) }, conectado: viewModel.isConnected
