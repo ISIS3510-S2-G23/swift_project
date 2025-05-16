@@ -14,6 +14,11 @@ class ForumViewModel: ObservableObject {
     @Published var posts: [Post] = []
     @Published var filteredPosts: [Post] = []
     @Published var selectedFilter: String? = nil
+    @Published var showAlert: Bool = false
+    @Published var alertMessage: String = ""
+    @Published var alertTitle: String = "Post Comment"
+    @Published var isPostSuccessful: Bool = false
+    @Published var isPendingSync: Bool = false
     
     private var db = Firestore.firestore()
     private var listenerRegistration: ListenerRegistration?
@@ -25,6 +30,10 @@ class ForumViewModel: ObservableObject {
         setupNetworkMonitoring()
         
         print("ESTADO CONEXION: \(isConnected)")
+        
+        Task {
+            await manageCommentQueue()
+        }
         
         fetchPosts()
     }
@@ -127,6 +136,49 @@ class ForumViewModel: ObservableObject {
     
         // Create a new dictionary by merging
         let updatedComments = comments.merging([userId: comment]) { (_, new) in new }
+        
+        //Manage in case of no network connectivity
+        if isConnected {
+            addCommentToDB(postId: postId, updatedComments: updatedComments)
+        }
+        else {
+            let commentId = CommentCacheManager.shared.cacheComment(pPostId: postId, pUpdatedComments: updatedComments)
+            
+            if !commentId.isEmpty {
+                alertTitle = "Offline Mode"
+                alertMessage = "Your comment has been saved and will be uploaded when you're back online."
+                isPostSuccessful = true
+                isPendingSync = true
+                
+                
+            } else {
+                alertTitle = "Error"
+                alertMessage = "Failed to save your comment. Please try again."
+                isPostSuccessful = false
+            }
+        }
+    }
+    
+    func manageCommentQueue() async {
+        //Check if there are any pending comments
+        let pendingComments = CommentCacheManager.shared.getPendingComments()
+        
+        //If there are any pending comments, upload them to the DB
+        if pendingComments.isEmpty {
+            print("No pending comments to upload")
+            return
+        }
+        else {
+            print("Adding pending comments")
+            for (commentId, cachedComment) in pendingComments {
+                print("Adding comment \(commentId)")
+                addCommentToDB(postId: cachedComment.postId, updatedComments: cachedComment.updatedComments)
+                CommentCacheManager.shared.removeComment(withId: commentId)
+            }
+        }
+    }
+    
+    func addCommentToDB(postId: String, updatedComments: [String: String]) {
         print("UPDATING COMMENT - comments \(updatedComments)")
         // Safely pass to Firestore
         db.collection("posts").document(postId).updateData([
