@@ -4,8 +4,6 @@
 //
 //  Created by Juan Sebastian Pardo on 3/17/25.
 //
-
-
 import SwiftUI
 import Firebase
 import UIKit
@@ -69,11 +67,24 @@ struct AddPostView: View {
                     .cornerRadius(8)
 
                     if let selectedImage = viewModel.selectedImage {
-                        Image(uiImage: selectedImage)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 100)
-                            .cornerRadius(8)
+                        ZStack(alignment: .topTrailing) {
+                            Image(uiImage: selectedImage)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 100)
+                                .cornerRadius(8)
+                            
+                            Button(action: {
+                                viewModel.selectedImage = nil
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.red)
+                                    .background(Color.white)
+                                    .clipShape(Circle())
+                                    .font(.title2)
+                            }
+                            .offset(x: 8, y: -8)
+                        }
                     }
 
                     HStack {
@@ -87,12 +98,36 @@ struct AddPostView: View {
 
                         Spacer()
 
-                        Button(action: {
-                            showImagePicker = true
-                        }) {
-                            Image(systemName: "camera")
-                                .font(.title2)
-                                .foregroundColor(.primary)
+                        HStack(spacing: 16) {
+                            // Caption suggestion button (only shown when image is selected)
+                            if viewModel.selectedImage != nil {
+                                Button(action: {
+                                    viewModel.generateCaption()
+                                }) {
+                                    HStack {
+                                        if viewModel.isGeneratingCaption {
+                                            ProgressView()
+                                                .scaleEffect(0.8)
+                                                .progressViewStyle(CircularProgressViewStyle(tint: .primary))
+                                        } else {
+                                            Image(systemName: "text.bubble")
+                                                .font(.title2)
+                                        }
+                                        Text("Suggest")
+                                            .font(.caption)
+                                    }
+                                    .foregroundColor(.primary)
+                                }
+                                .disabled(viewModel.isGeneratingCaption)
+                            }
+
+                            Button(action: {
+                                showImagePicker = true
+                            }) {
+                                Image(systemName: "camera")
+                                    .font(.title2)
+                                    .foregroundColor(.primary)
+                            }
                         }
                     }
 
@@ -186,15 +221,35 @@ struct AddPostView: View {
             }
         }
         .alert(isPresented: $viewModel.showAlert) {
-            Alert(
-                title: Text(viewModel.alertTitle),
-                message: Text(viewModel.alertMessage),
-                dismissButton: .default(Text("OK")) {
-                    if viewModel.isPostSuccessful {
-                
+            if viewModel.isShowingCaptionSuggestion {
+                // Caption suggestion alert
+                Alert(
+                    title: Text(viewModel.alertTitle),
+                    message: Text(viewModel.alertMessage),
+                    primaryButton: .default(Text("Use Caption")) {
+                        if let suggestedCaption = viewModel.suggestedCaption {
+                            viewModel.postContent = suggestedCaption
+                        }
+                        viewModel.isShowingCaptionSuggestion = false
+                        viewModel.suggestedCaption = nil
+                    },
+                    secondaryButton: .cancel(Text("Dismiss")) {
+                        viewModel.isShowingCaptionSuggestion = false
+                        viewModel.suggestedCaption = nil
                     }
-                }
-            )
+                )
+            } else {
+                // Regular alert (post success, errors, etc.)
+                Alert(
+                    title: Text(viewModel.alertTitle),
+                    message: Text(viewModel.alertMessage),
+                    dismissButton: .default(Text("OK")) {
+                        if viewModel.isPostSuccessful {
+                            // Handle post success if needed
+                        }
+                    }
+                )
+            }
         }
     }
 
