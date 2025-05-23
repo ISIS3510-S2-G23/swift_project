@@ -82,12 +82,15 @@ class MapViewModel: UIViewController, @preconcurrency CLLocationManagerDelegate,
     }
     
     func paintLocations() {
-        for annotation in locations {
+        let locationCount = locations.count
+        for i in 0..<locationCount {
+            let annotation = locations[i]
             DispatchQueue.main.async {
                 self.mapView.addAnnotation(annotation)
             }
         }
     }
+
     func setupLocationManager() {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
@@ -130,9 +133,7 @@ class MapViewModel: UIViewController, @preconcurrency CLLocationManagerDelegate,
         centerMapOnLocation(userLocation)
     }
     
-    // Async function to fetch locations from Firestore
     func fetchLocations() async {
-        
         print("STARTED FETCHING LOCATIONS")
         let db = Firestore.firestore()
         
@@ -143,37 +144,40 @@ class MapViewModel: UIViewController, @preconcurrency CLLocationManagerDelegate,
                 return
             }
             
-            // Clear the previous annotations
-            self.mapView.removeAnnotations(self.mapView.annotations)
-            
-            for document in snapshot.documents {
-                let data = document.data()
+            // Prepare new annotations
+            var newAnnotations: [MKPointAnnotation] = []
+
+            let docs = snapshot.documents
+            let count = docs.count
+
+            for i in 0..<count {
+                let data = docs[i].data()
                 
                 if let name = data["name"] as? String,
                    let geoPoint = data["location"] as? GeoPoint {
                     
-                    let latitude = geoPoint.latitude
-                    let longitude = geoPoint.longitude
-                    
                     let annotation = MKPointAnnotation()
-                    annotation.coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+                    annotation.coordinate = CLLocationCoordinate2D(
+                        latitude: geoPoint.latitude,
+                        longitude: geoPoint.longitude
+                    )
                     annotation.title = name
                     annotation.subtitle = "Recycle Point"
                     
-                    // Add annotation to mapView
-                    DispatchQueue.main.async {
-                        self.mapView.addAnnotation(annotation)
-                        self.locations.append(annotation)
-                        print("FETCHED \(annotation)")
-                    }
+                    newAnnotations.append(annotation)
+                    print("FETCHED \(annotation)")
                 }
             }
-            
-            // Set locations loaded flag to true
+
+            // Apply updates in one main-thread block
             DispatchQueue.main.async {
+                self.mapView.removeAnnotations(self.mapView.annotations)
+                self.mapView.addAnnotations(newAnnotations)
+                self.locations = newAnnotations
                 self.locationsLoaded = true
                 print("FINISHED FETCHING LOCATIONS")
             }
+            
         } catch {
             print("Error fetching locations: \(error)")
         }

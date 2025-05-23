@@ -55,15 +55,17 @@ class CommentCacheManager {
         }
     }
     
-    // Get all pending comments that need to be uploaded
     func getPendingComments() -> [String: CachedComment] {
-        var pendingComments = [String: CachedComment]()
-        
         guard let pendingCommentIds = getPendingCommentIds() else {
-            return pendingComments
+            return [:]
         }
-        
-        for commentId in pendingCommentIds {
+
+        let count = pendingCommentIds.count
+        var pendingComments = Dictionary<String, CachedComment>()
+        pendingComments.reserveCapacity(count)
+
+        for i in 0..<count {
+            let commentId = pendingCommentIds[i]
             let commentURL = cacheDirectory.appendingPathComponent(commentId)
             
             do {
@@ -74,9 +76,10 @@ class CommentCacheManager {
                 print("Error retrieving cached comment \(commentId): \(error.localizedDescription)")
             }
         }
-        
+
         return pendingComments
     }
+
     
     // Remove a comment from cache after successful upload
     func removeComment(withId commentId: String) {

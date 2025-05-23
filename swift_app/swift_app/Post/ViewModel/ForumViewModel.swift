@@ -160,23 +160,35 @@ class ForumViewModel: ObservableObject {
     }
     
     func manageCommentQueue() async {
-        //Check if there are any pending comments
+        // Check if there are any pending comments
         let pendingComments = CommentCacheManager.shared.getPendingComments()
-        
-        //If there are any pending comments, upload them to the DB
+
         if pendingComments.isEmpty {
             print("No pending comments to upload")
             return
         }
-        else {
-            print("Adding pending comments")
-            for (commentId, cachedComment) in pendingComments {
-                print("Adding comment \(commentId)")
-                addCommentToDB(postId: cachedComment.postId, updatedComments: cachedComment.updatedComments)
-                CommentCacheManager.shared.removeComment(withId: commentId)
-            }
+
+        print("Adding pending comments")
+
+        // Retreive keys and values before iterating
+        let keys = pendingComments.keys
+        let values = pendingComments.values
+
+        // Convert K,Vs into arrays
+        let commentIds = Array(keys)
+        let cachedComments = Array(values)
+
+        // Use indexed loops instead of for each loops
+        for i in 0..<commentIds.count {
+            let commentId = commentIds[i]
+            let cachedComment = cachedComments[i]
+            
+            print("Adding comment \(commentId)")
+            addCommentToDB(postId: cachedComment.postId, updatedComments: cachedComment.updatedComments)
+            CommentCacheManager.shared.removeComment(withId: commentId)
         }
     }
+
     
     func addCommentToDB(postId: String, updatedComments: [String: String]) {
         print("UPDATING COMMENT - comments \(updatedComments)")
