@@ -9,118 +9,143 @@ import SwiftUI
 
 struct PostDetailView: View {
     let post: Post
+    let conectado: Bool
+    let viewModel: ForumViewModel
     @State private var image: UIImage? = nil
     @State private var isLoading = false
+    @State private var isCommenting: Bool = false
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                
-                // Title
-                Text(post.title)
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                
-                HStack {
-                    Label(post.user, systemImage: "person.circle")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+        ZStack{
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    
+                    // Title
+                    Text(post.title)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    
+                    HStack {
+                        Label(post.user, systemImage: "person.circle")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Spacer()
+                        
+                        Text(post.timestamp.formatted(date: .long, time: .shortened))
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                    
+                    // Tags
+                    if let tags = post.tags {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack {
+                                ForEach(tags, id: \.self) { tag in
+                                    Text(tag)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(getTagColor(for: tag))
+                                        .cornerRadius(12)
+                                        .foregroundColor(.black.opacity(0.7))
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Image
+                    if let asset = post.asset, !asset.isEmpty {
+                        if conectado {
+                            if let uiImage = image {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 250)
+                                    .clipped()
+                                    .cornerRadius(12)
+                            } else {
+                                Rectangle()
+                                    .foregroundColor(Color.gray.opacity(0.2))
+                                    .frame(height: 200)
+                                    .cornerRadius(8)
+                                    .onAppear {
+                                        loadImage(from: asset)
+                                    }
+                            }
+                        } else {
+                            Text("No connection, image not available")
+                                .frame(maxWidth: .infinity, minHeight: 250)
+                                .background(Color.gray.opacity(0.1))
+                                .cornerRadius(12)
+                                .multilineTextAlignment(.center)
+                        }
+                    }
+                    
+                    
+                    // Text content
+                    Text(post.text)
+                        .font(.body)
+                        .foregroundColor(.primary)
+                    
+                    // Upvotes and comments
+                    HStack(spacing: 24) {
+                        HStack {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .foregroundColor(.green)
+                            Text("\(post.upvotes) Upvotes")
+                        }
+                        
+                        Button(
+                            action: { isCommenting = true}
+                        )
+                        {
+                            HStack {
+                                Image(systemName: "text.bubble.fill")
+                                    .foregroundColor(.blue)
+                                Text("\(post.comments?.count ?? 0) Comments")
+                            }
+                        }
+                        
+                    }
+                    .font(.subheadline)
+                    .padding(.top, 8)
+                    
+                    // Comment list
+                    if let comments = post.comments, !comments.isEmpty {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Comments")
+                                .font(.headline)
+                                .padding(.top)
+                            
+                            ForEach(comments.sorted(by: { $0.key > $1.key }), id: \.key) { key, value in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(value)
+                                        .font(.body)
+                                        .foregroundColor(.primary)
+                                    Text(key)
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                                .padding()
+                                .background(Color.gray.opacity(0.1))
+                                .cornerRadius(8)
+                            }
+                        }
+                    }
                     
                     Spacer()
-                    
-                    Text(post.timestamp.formatted(date: .long, time: .shortened))
-                        .font(.caption)
-                        .foregroundColor(.gray)
                 }
-                
-                // Tags
-                if let tags = post.tags {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack {
-                            ForEach(tags, id: \.self) { tag in
-                                Text(tag)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 6)
-                                    .background(getTagColor(for: tag))
-                                    .cornerRadius(12)
-                                    .foregroundColor(.black.opacity(0.7))
-                            }
-                        }
-                    }
-                }
-                
-                // Image
-                if let asset = post.asset, !asset.isEmpty {
-                    if let uiImage = image {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 250)
-                            .clipped()
-                            .cornerRadius(12)
-                    } else {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.2))
-                            .frame(height: 250)
-                            .cornerRadius(12)
-                            .onAppear {
-                                loadImage(from: asset)
-                            }
-                    }
-                }
-
-                // Text content
-                Text(post.text)
-                    .font(.body)
-                    .foregroundColor(.primary)
-                
-                // Upvotes and comments
-                HStack(spacing: 24) {
-                    HStack {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .foregroundColor(.green)
-                        Text("\(post.upvotes) Upvotes")
-                    }
-                    
-                    HStack {
-                        Image(systemName: "text.bubble.fill")
-                            .foregroundColor(.blue)
-                        Text("\(post.comments?.count ?? 0) Comments")
-                    }
-                }
-                .font(.subheadline)
-                .padding(.top, 8)
-
-                // Comment list
-                if let comments = post.comments, !comments.isEmpty {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Comments")
-                            .font(.headline)
-                            .padding(.top)
-                        
-                        ForEach(comments.sorted(by: { $0.key > $1.key }), id: \.key) { key, value in
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(value)
-                                    .font(.body)
-                                    .foregroundColor(.primary)
-                                Text(key)
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                            }
-                            .padding()
-                            .background(Color.gray.opacity(0.1))
-                            .cornerRadius(8)
-                        }
-                    }
-                }
-                
-                Spacer()
+                .padding()
             }
-            .padding()
+            .navigationTitle("Post Detail")
+            .navigationBarTitleDisplayMode(.inline)
+            
+            if isCommenting {
+
+                CommentPopupView(isPresented: $isCommenting, viewModel: viewModel, post: post)
+            }
         }
-        .navigationTitle("Post Detail")
-        .navigationBarTitleDisplayMode(.inline)
     }
     
     private func loadImage(from urlString: String) {
@@ -150,3 +175,5 @@ struct PostDetailView: View {
         }
     }
 }
+
+

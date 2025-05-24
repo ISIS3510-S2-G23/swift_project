@@ -4,7 +4,6 @@
 //
 //  Created by Juan Sebastian Pardo on 3/17/25.
 //
-
 import SwiftUI
 import Firebase
 import UIKit
@@ -15,7 +14,7 @@ struct AddPostView: View {
     @StateObject private var viewModel = AddPostViewModel()
     @State private var showImagePicker = false
     @State private var showCategoryPicker = false
-    @State private var connectionStatus = NetworkMonitor.shared.status
+    @State private var connectionStatus = AddPostNetworkMonitor.shared.status
 
     private let categories = ["Upcycle", "Transport", "Recycling", "Sustainability"]
 
@@ -40,37 +39,6 @@ struct AddPostView: View {
                     .padding(.vertical, 8)
                     .padding(.horizontal, 16)
                     .background(Color.orange.opacity(0.1))
-                    .cornerRadius(8)
-                }
-                
-                // Pending posts sync indicator
-                if viewModel.isPendingSync {
-                    HStack {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(.blue)
-                        Text("You have pending posts that will sync when online")
-                            .font(.caption)
-                            .foregroundColor(.blue)
-                        
-                        Spacer()
-                        
-                        if connectionStatus == .connected {
-                            Button(action: {
-                                PostSyncManager.shared.syncPendingPosts()
-                            }) {
-                                Text("Sync Now")
-                                    .font(.caption)
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.blue)
-                                    .cornerRadius(8)
-                            }
-                        }
-                    }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
-                    .background(Color.blue.opacity(0.1))
                     .cornerRadius(8)
                 }
 
@@ -99,11 +67,24 @@ struct AddPostView: View {
                     .cornerRadius(8)
 
                     if let selectedImage = viewModel.selectedImage {
-                        Image(uiImage: selectedImage)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 100)
-                            .cornerRadius(8)
+                        ZStack(alignment: .topTrailing) {
+                            Image(uiImage: selectedImage)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 100)
+                                .cornerRadius(8)
+                            
+                            Button(action: {
+                                viewModel.selectedImage = nil
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.red)
+                                    .background(Color.white)
+                                    .clipShape(Circle())
+                                    .font(.title2)
+                            }
+                            .offset(x: 8, y: -8)
+                        }
                     }
 
                     HStack {
@@ -117,12 +98,36 @@ struct AddPostView: View {
 
                         Spacer()
 
-                        Button(action: {
-                            showImagePicker = true
-                        }) {
-                            Image(systemName: "camera")
-                                .font(.title2)
-                                .foregroundColor(.primary)
+                        HStack(spacing: 16) {
+                            // Caption suggestion button (only shown when image is selected)
+                            if viewModel.selectedImage != nil {
+                                Button(action: {
+                                    viewModel.generateCaption()
+                                }) {
+                                    HStack {
+                                        if viewModel.isGeneratingCaption {
+                                            ProgressView()
+                                                .scaleEffect(0.8)
+                                                .progressViewStyle(CircularProgressViewStyle(tint: .primary))
+                                        } else {
+                                            Image(systemName: "text.bubble")
+                                                .font(.title2)
+                                        }
+                                        Text("Suggest")
+                                            .font(.caption)
+                                    }
+                                    .foregroundColor(.primary)
+                                }
+                                .disabled(viewModel.isGeneratingCaption)
+                            }
+
+                            Button(action: {
+                                showImagePicker = true
+                            }) {
+                                Image(systemName: "camera")
+                                    .font(.title2)
+                                    .foregroundColor(.primary)
+                            }
                         }
                     }
 
@@ -177,12 +182,12 @@ struct AddPostView: View {
         }
         .onAppear {
             logScreen("AddPostView")
-            connectionStatus = NetworkMonitor.shared.status
+            connectionStatus = AddPostNetworkMonitor.shared.status
             // Check for any pending posts
             viewModel.checkPendingPosts()
         }
         .onReceive(NotificationCenter.default.publisher(for: .networkStatusChanged)) { _ in
-            connectionStatus = NetworkMonitor.shared.status
+            connectionStatus = AddPostNetworkMonitor.shared.status
         }
         .fullScreenCover(isPresented: $showImagePicker) {
             ImagePicker(isPresented: $showImagePicker, selectedImage: $viewModel.selectedImage)
@@ -216,15 +221,35 @@ struct AddPostView: View {
             }
         }
         .alert(isPresented: $viewModel.showAlert) {
-            Alert(
-                title: Text(viewModel.alertTitle),
-                message: Text(viewModel.alertMessage),
-                dismissButton: .default(Text("OK")) {
-                    if viewModel.isPostSuccessful {
-                
+            if viewModel.isShowingCaptionSuggestion {
+                // Caption suggestion alert
+                Alert(
+                    title: Text(viewModel.alertTitle),
+                    message: Text(viewModel.alertMessage),
+                    primaryButton: .default(Text("Use Caption")) {
+                        if let suggestedCaption = viewModel.suggestedCaption {
+                            viewModel.postContent = suggestedCaption
+                        }
+                        viewModel.isShowingCaptionSuggestion = false
+                        viewModel.suggestedCaption = nil
+                    },
+                    secondaryButton: .cancel(Text("Dismiss")) {
+                        viewModel.isShowingCaptionSuggestion = false
+                        viewModel.suggestedCaption = nil
                     }
-                }
-            )
+                )
+            } else {
+                // Regular alert (post success, errors, etc.)
+                Alert(
+                    title: Text(viewModel.alertTitle),
+                    message: Text(viewModel.alertMessage),
+                    dismissButton: .default(Text("OK")) {
+                        if viewModel.isPostSuccessful {
+                            // Handle post success if needed
+                        }
+                    }
+                )
+            }
         }
     }
 

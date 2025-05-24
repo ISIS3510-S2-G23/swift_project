@@ -9,6 +9,7 @@ import SwiftUI
 struct PostCardView: View {
     let post: Post
     let upvoteAction: () -> Void
+    let conectado: Bool
     
     @State private var image: UIImage? = nil
     @State private var isLoading = false
@@ -51,24 +52,33 @@ struct PostCardView: View {
             
             // Image if available
             if let asset = post.asset, !asset.isEmpty {
-                if let uiImage = image {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 200)
-                        .clipped()
-                        .cornerRadius(8)
+                if conectado {
+                    if let uiImage = image {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 200)
+                            .clipped()
+                            .cornerRadius(8)
+                    } else {
+                        Rectangle()
+                            .foregroundColor(Color.gray.opacity(0.2))
+                            .frame(height: 200)
+                            .cornerRadius(8)
+                            .onAppear {
+                                loadImage(from: asset)
+                            }
+                    }
                 } else {
-                    Rectangle()
-                        .foregroundColor(Color.gray.opacity(0.2))
-                        .frame(height: 200)
+                    Text("No connection, image not available")
+                        .frame(maxWidth: .infinity, minHeight: 200)
+                        .background(Color.gray.opacity(0.1))
                         .cornerRadius(8)
-                        .onAppear {
-                            loadImage(from: asset)
-                        }
+                        .multilineTextAlignment(.center)
                 }
             }
+
             
             // Actions row
             HStack(spacing: 24) {
@@ -125,4 +135,25 @@ struct PostCardView: View {
             return Color.gray.opacity(0.3)
         }
     }
+}
+
+#Preview {
+    PostCardView(
+        post: Post(
+            id: UUID().uuidString,
+            asset: "https://res.cloudinary.com/dhrkcqd33/image/upload/v1745441946/image_gawkxi.jpg",
+            comments: ["user1": "Great post!", "user2": "Very inspiring!"],
+            tags: ["Recycling"],
+            text: "Let’s reduce waste and build a more sustainable world with recycling and community action.",
+            timestamp: Date(),
+            title: "A Greener Future",
+            upvotedBy: ["user1", "user2"],
+            upvotes: 42,
+            user: "EcoWarrior123"
+        ),
+        upvoteAction: {},
+        conectado: false
+    )
+    .padding()
+    .background(Color.gray.opacity(0.1))
 }

@@ -14,6 +14,11 @@ class ForumViewModel: ObservableObject {
     @Published var posts: [Post] = []
     @Published var filteredPosts: [Post] = []
     @Published var selectedFilter: String? = nil
+    @Published var showAlert: Bool = false
+    @Published var alertMessage: String = ""
+    @Published var alertTitle: String = "Post Comment"
+    @Published var isPostSuccessful: Bool = false
+    @Published var isPendingSync: Bool = false
     
     private var db = Firestore.firestore()
     private var listenerRegistration: ListenerRegistration?
@@ -25,6 +30,10 @@ class ForumViewModel: ObservableObject {
         setupNetworkMonitoring()
         
         print("ESTADO CONEXION: \(isConnected)")
+        
+        Task {
+            await manageCommentQueue()
+        }
         
         fetchPosts()
     }
@@ -115,6 +124,81 @@ class ForumViewModel: ObservableObject {
         selectedFilter = filter
         applyFilter()
     }
+    
+    func addComment(post: Post, comment: String) {
+        guard let postId = post.id else { return }
+        
+        print("UPDATING COMMENT - id \(postId)")
+        let userId = Auth.auth().currentUser?.displayName ?? "anonymous"
+        print("UPDATING COMMENT - user \(userId)")
+        // Ensure comments is [String: String]
+        let comments = post.comments ?? [:]
+    
+        // Create a new dictionary by merging
+        let updatedComments = comments.merging([userId: comment]) { (_, new) in new }
+        
+        //Manage in case of no network connectivity
+        if isConnected {
+            addCommentToDB(postId: postId, updatedComments: updatedComments)
+        }
+        else {
+            let commentId = CommentCacheManager.shared.cacheComment(pPostId: postId, pUpdatedComments: updatedComments)
+            
+            if !commentId.isEmpty {
+                alertTitle = "Offline Mode"
+                alertMessage = "Your comment has been saved and will be uploaded when you're back online."
+                isPostSuccessful = true
+                isPendingSync = true
+                
+                
+            } else {
+                alertTitle = "Error"
+                alertMessage = "Failed to save your comment. Please try again."
+                isPostSuccessful = false
+            }
+        }
+    }
+    
+    func manageCommentQueue() async {
+        // Check if there are any pending comments
+        let pendingComments = CommentCacheManager.shared.getPendingComments()
+
+        if pendingComments.isEmpty {
+            print("No pending comments to upload")
+            return
+        }
+
+        print("Adding pending comments")
+
+        // Retreive keys and values before iterating
+        let keys = pendingComments.keys
+        let values = pendingComments.values
+
+        // Convert K,Vs into arrays
+        let commentIds = Array(keys)
+        let cachedComments = Array(values)
+
+        // Use indexed loops instead of for each loops
+        for i in 0..<commentIds.count {
+            let commentId = commentIds[i]
+            let cachedComment = cachedComments[i]
+            
+            print("Adding comment \(commentId)")
+            addCommentToDB(postId: cachedComment.postId, updatedComments: cachedComment.updatedComments)
+            CommentCacheManager.shared.removeComment(withId: commentId)
+        }
+    }
+
+    
+    func addCommentToDB(postId: String, updatedComments: [String: String]) {
+        print("UPDATING COMMENT - comments \(updatedComments)")
+        // Safely pass to Firestore
+        db.collection("posts").document(postId).updateData([
+            "comments": updatedComments
+        ])
+        print("UPDATING COMMENT - UPDATED")
+    }
+
     
     func upvotePost(_ post: Post) {
         guard let postId = post.id else { return }

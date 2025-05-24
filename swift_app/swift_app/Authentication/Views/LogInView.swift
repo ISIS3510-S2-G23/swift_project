@@ -3,7 +3,7 @@
 //  swift_app
 //
 //  Created by Paulina Arrazola on 12/03/25.
-//import SwiftUI
+
 import FirebaseAuth
 import SwiftUICore
 import SwiftUI

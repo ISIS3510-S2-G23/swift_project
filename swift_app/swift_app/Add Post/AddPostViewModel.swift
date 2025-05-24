@@ -23,7 +23,13 @@ class AddPostViewModel: ObservableObject {
     @Published var selectedCategories: [String] = []
     @Published var isPendingSync: Bool = false
     
+    // Caption generation properties
+    @Published var isGeneratingCaption: Bool = false
+    @Published var suggestedCaption: String?
+    @Published var isShowingCaptionSuggestion: Bool = false
+    
     private var db = Firestore.firestore()
+    private let captionService = CaptionGeneratorService()
     
     init() {
         // Register for network status change notifications
@@ -39,6 +45,61 @@ class AddPostViewModel: ObservableObject {
         DispatchQueue.main.async {
             let pendingPosts = PostCacheManager.shared.getPendingPosts()
             self.isPendingSync = !pendingPosts.isEmpty
+        }
+    }
+    
+    func generateCaption() {
+        guard let image = selectedImage else {
+            alertTitle = "Caption Error"
+            alertMessage = "No image selected to generate caption for."
+            isShowingCaptionSuggestion = false
+            showAlert = true
+            return
+        }
+        
+        // Check network connectivity
+        guard AddPostNetworkMonitor.shared.isConnected else {
+            alertTitle = "No Internet Connection"
+            alertMessage = "Caption suggestion requires an internet connection. This feature will be available when your connection resumes."
+            isShowingCaptionSuggestion = false
+            showAlert = true
+            return
+        }
+        
+        isGeneratingCaption = true
+        
+        Task {
+            do {
+                let caption = try await captionService.generateCaption(for: image)
+                
+                await MainActor.run {
+                    self.isGeneratingCaption = false
+                    self.suggestedCaption = caption
+                    self.alertTitle = "Caption Suggestion"
+                    self.alertMessage = "Suggested caption: \"\(caption)\"\n\nWould you like to use this caption?"
+                    self.isShowingCaptionSuggestion = true
+                    self.showAlert = true
+                    
+                    // Track caption generation
+                    Analytics.logEvent("caption_generated", parameters: [
+                        "success": true
+                    ])
+                }
+            } catch {
+                await MainActor.run {
+                    self.isGeneratingCaption = false
+                    self.alertTitle = "Caption Error"
+                    self.alertMessage = "Failed to generate caption: \(error.localizedDescription)"
+                    self.isShowingCaptionSuggestion = false
+                    self.showAlert = true
+                    
+                    // Track caption generation failure
+                    Analytics.logEvent("caption_generated", parameters: [
+                        "success": false,
+                        "error": error.localizedDescription
+                    ])
+                }
+            }
         }
     }
     
@@ -68,7 +129,7 @@ class AddPostViewModel: ObservableObject {
         }
         
         // Check network connectivity
-        if NetworkMonitor.shared.isConnected {
+        if AddPostNetworkMonitor.shared.isConnected {
             // If online, proceed with normal post flow
             if let image = selectedImage {
                 uploadImageToCloudinary(image) { [weak self] cloudinaryUrl in
@@ -114,7 +175,6 @@ class AddPostViewModel: ObservableObject {
                 "has_image": selectedImage != nil
             ])
             
-            // Reset form
             resetForm()
         } else {
             alertTitle = "Error"
@@ -197,6 +257,8 @@ class AddPostViewModel: ObservableObject {
         postContent = ""
         selectedImage = nil
         selectedCategories = []
+        suggestedCaption = nil
+        isShowingCaptionSuggestion = false
     }
     
     private func uploadImageToCloudinary(_ image: UIImage, completion: @escaping (String?) -> Void) {
