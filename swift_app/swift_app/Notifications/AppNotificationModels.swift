@@ -4,32 +4,31 @@
 //
 //  Created by Paulina Arrazola on 20/05/25.
 //
+
 import Foundation
 import FirebaseFirestore
+import Network
 
-// Renamed to avoid conflicts with NSNotification
 enum AppNotificationType: String, Codable {
     case upvote = "upvote"
     case newPost = "newPost"
     case forumPost = "forumPost"
 }
 
-// Renamed to avoid conflicts with system notifications
 struct AppNotification: Identifiable {
     var id = UUID().uuidString
     var type: AppNotificationType
     var title: String
-    var message: String // More detailed message
+    var message: String
     var timestamp: Date
     var read: Bool = false
     var relatedPostId: String?
     var relatedUserId: String?
-    var relatedUserName: String? // Name of the user who performed the action
-    var postTitle: String? // Title of the related post
+    var relatedUserName: String?
+    var postTitle: String?
     var forumId: String?
-    var forumName: String? // Name of the forum
+    var forumName: String?
     
-    // For easy timestamp display
     var timeAgo: String {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .short
@@ -40,18 +39,22 @@ struct AppNotification: Identifiable {
 class AppNotificationService: ObservableObject {
     @Published var notifications: [AppNotification] = []
     private var db = Firestore.firestore()
+    private let networkMonitor = NWPathMonitor()
+    @Published private(set) var isConnected = true
     
-    // Using singleton pattern without parameters to avoid warnings
     static let shared = AppNotificationService()
     
     private init() {
         fetchNotifications()
+        setupNetworkMonitoring()
+    }
+    deinit {
+        networkMonitor.cancel()
     }
     
     func fetchNotifications() {
-        // Sample notifications with more descriptive information
+        // Sample notifications with descriptive information
         notifications = [
-            // Someone upvoted your post
             AppNotification(
                 type: .upvote,
                 title: "New upvote on your post",
@@ -63,7 +66,6 @@ class AppNotificationService: ObservableObject {
                 postTitle: "Prueba con tags (ver si registra el evento)"
             ),
             
-            // Your post was added to a forum
             AppNotification(
                 type: .forumPost,
                 title: "Post added to forum",
@@ -75,7 +77,6 @@ class AppNotificationService: ObservableObject {
                 forumName: "Recycling"
             ),
             
-            // Another forum post
             AppNotification(
                 type: .forumPost,
                 title: "Post added to forum",
@@ -87,6 +88,19 @@ class AppNotificationService: ObservableObject {
                 forumName: "Sustainability"
             )
         ]
+    }
+    
+    private func setupNetworkMonitoring() {
+        networkMonitor.pathUpdateHandler = { [weak self] path in
+            DispatchQueue.main.async {
+                let wasConnected = self?.isConnected ?? true
+                self?.isConnected = (path.status == .satisfied)
+                if !wasConnected && self?.isConnected == true {
+                    print("Network reconnected")
+                }
+            }
+        }
+        networkMonitor.start(queue: DispatchQueue(label: "NetworkMonitor"))
     }
     
     func markAsRead(_ notificationId: String) {

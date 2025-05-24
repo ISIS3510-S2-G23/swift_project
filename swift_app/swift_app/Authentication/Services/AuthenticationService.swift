@@ -23,7 +23,6 @@ class AuthenticationService: ObservableObject {
             self?.currentFirebaseUser = firebaseUser
             
             if let firebaseUser = firebaseUser {
-                // Convert to your app's user model
                 self?.currentUser = AppUser(from: firebaseUser)
                 
             } else {

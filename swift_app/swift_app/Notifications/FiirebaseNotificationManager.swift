@@ -36,17 +36,13 @@ class FirebaseNotificationManager {
                 
                 // Process document changes
                 for change in snapshot.documentChanges {
-                    // Only process modified documents to detect new upvotes
                     if change.type == .modified {
                         let data = change.document.data()
                         let postId = change.document.documentID
                         
-                        // These fields might be null if not present, which is fine
                         let postTitle = data["text"] as? String
                         
                         if let upvotedBy = data["upvotedBy"] as? [[String: Any]] {
-                            // In a real app, you'd track which upvotes are new
-                            // For demo purposes, we'll assume the latest upvote is new
                             if let lastUpvote = upvotedBy.last,
                                let username = lastUpvote["0"] as? String {
                                 
@@ -75,8 +71,6 @@ class FirebaseNotificationManager {
     }
     
     private func listenForForumPosts(userId: String) {
-        // Implementation depends on your specific database structure
-        // This would listen for when posts get added to forums
     }
     
     func stopListening() {
